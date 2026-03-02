@@ -51,7 +51,7 @@ export function Player() {
 
     // Update camera to match player body position (eyes level)
     const translation = rigidBody.current.translation()
-    state.camera.position.set(translation.x, translation.y + 0.8, translation.z)
+    state.camera.position.set(translation.x, translation.y + 0.75, translation.z)
 
     // Calculate movement direction relative to camera
     frontVector.set(0, 0, Number(backward) - Number(forward))
@@ -72,9 +72,7 @@ export function Player() {
     const rayOrigin = { x: translation.x, y: translation.y, z: translation.z }
     const rayDir = { x: 0, y: -1, z: 0 }
     const ray = new rapier.Ray(rayOrigin, rayDir)
-    // The capsule total half-height is 1.0 (0.5 halfHeight + 0.5 radius)
-    // We cast 1.05 units down to detect the floor, and exclude the player's rigidBody
-    const hit = world.castRay(ray, 1.05, true, undefined, undefined, undefined, rigidBody.current as any)
+    const hit = world.castRay(ray, 1.025, true, undefined, undefined, undefined, rigidBody.current as any)
     const isGrounded = hit !== null
 
     if (jump && isGrounded) {
@@ -84,6 +82,12 @@ export function Player() {
     // Footsteps
     const isMoving = Math.abs(velocity.x) > 0.5 || Math.abs(velocity.z) > 0.5
     handleFootsteps(isMoving, isGrounded)
+    
+    // Void Reset
+    if (translation.y < -10) {
+      rigidBody.current.setTranslation({ x: 1, y: 1, z: 0 }, true)
+      rigidBody.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+    }
   })
 
   return (
@@ -94,10 +98,12 @@ export function Player() {
         colliders={false}
         mass={1}
         type="dynamic"
-        position={[0, 5, 0]}
+        position={[1, 1, 0]}
         enabledRotations={[false, false, false]}
       >
-        <CapsuleCollider args={[0.5, 0.5]} />
+        {/* CapsuleCollider args: [halfHeight, radius]. Total height = 2 * (halfHeight + radius)
+            We want total height = 1.95. If radius = 0.5, then halfHeight = (1.95 - 2*0.5)/2 = 0.475 */}
+        <CapsuleCollider args={[0.475, 0.5]} />
         
       </RigidBody>
     </>
