@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, type MouseEvent as ReactMouseEvent } from 'react'
-import { useWM, type AppType } from './WindowManager'
+import { useWM } from './WindowManager'
+import { formatSize } from '@/utils/formatSize'
 
 /* ═══════════════════════════════════════════════
  *  File Explorer  (Windows XP style)
@@ -281,14 +282,6 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
     },
     [current, navigateTo, wm, openInVSCode],
   )
-
-  /* ── Format file size ── */
-  function formatSize(bytes?: number): string {
-    if (bytes == null) return ''
-    if (bytes < 1024) return `${bytes} o`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
-  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'Tahoma, sans-serif', fontSize: 13, color: '#000' }}>
@@ -600,13 +593,6 @@ function FileRow({
       </td>
     </tr>
   )
-}
-
-function formatSize(bytes?: number): string {
-  if (bytes == null) return ''
-  if (bytes < 1024) return `${bytes} o`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
 }
 
 /* ── Context menu item ── */

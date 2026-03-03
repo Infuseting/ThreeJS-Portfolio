@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useWM } from './WindowManager'
+import { parseGitHubRepo } from '@/utils/parseGitHubRepo'
 
 /* ═══════════════════════════════════════════════
  *  VS Code  (custom code viewer — no iframe)
@@ -205,10 +206,7 @@ export function VSCodeApp({ windowId, repo, filePath }: VSCodeAppProps) {
   }, [repo, filePath])
 
   async function fetchTree(r: string, path: string): Promise<TreeEntry[]> {
-    // Accept full URLs too
-    let repoClean = r
-    const ghMatch = r.match(/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/)
-    if (ghMatch) repoClean = ghMatch[1]
+    const repoClean = parseGitHubRepo(r)
 
     const url = `/api/github?repo=${encodeURIComponent(repoClean)}&path=${encodeURIComponent(path) || '/'   }`
     const res = await fetch(url)

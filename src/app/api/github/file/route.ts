@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseGitHubRepo } from '@/utils/parseGitHubRepo'
 
 /* ═══════════════════════════════════════════════
  *  GitHub raw file content proxy
@@ -13,16 +14,14 @@ const TOKEN = process.env.GITHUB_TOKEN
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
-  let repo = searchParams.get('repo')
+  const rawRepo = searchParams.get('repo')
   const path = searchParams.get('path') ?? ''
 
-  if (!repo || !path) {
+  if (!rawRepo || !path) {
     return NextResponse.json({ error: 'Missing ?repo=owner/name&path=...' }, { status: 400 })
   }
 
-  // Accept full GitHub URLs
-  const ghMatch = repo.match(/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/)
-  if (ghMatch) repo = ghMatch[1]
+  const repo = parseGitHubRepo(rawRepo)
 
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3.raw',
