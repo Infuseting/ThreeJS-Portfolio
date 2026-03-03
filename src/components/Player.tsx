@@ -1,10 +1,11 @@
 'use client'
 
 import * as THREE from 'three'
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls, PointerLockControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, useRapier, RapierRigidBody } from '@react-three/rapier'
+import { useComputerFocus, useComputerFocusActions } from '@/components/ComputerFocusStore'
 
 const SPEED = 5.0
 const direction = new THREE.Vector3()
@@ -15,6 +16,12 @@ export function Player() {
   const rigidBody = useRef<RapierRigidBody>(null)
   const [, get] = useKeyboardControls()
   const { rapier, world } = useRapier()
+  const pointerControlsRef = useRef<any>(null)
+
+  // Computer focus
+  const focusState = useComputerFocus()
+  const { exit: exitFocus } = useComputerFocusActions()
+  const isFocused = focusState.focused
   
   // Audio state
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -27,6 +34,22 @@ export function Player() {
     audioRef.current.volume = 0.5
     audioRef.current.loop = true
   }, [])
+
+  // Escape key exits computer focus and re-locks pointer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Escape' && isFocused) {
+        e.preventDefault()
+        document.exitPointerLock?.()
+        exitFocus()
+        setTimeout(() => {
+          pointerControlsRef.current?.lock?.()
+        }, 200)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isFocused, exitFocus])
 
   const handleFootsteps = (isMoving: boolean, isGrounded: boolean) => {
     if (!audioRef.current) return
@@ -45,6 +68,14 @@ export function Player() {
 
   useFrame((state) => {
     if (!rigidBody.current) return
+
+    // When focused on a computer, freeze the player and stop footsteps
+    if (isFocused) {
+      const velocity = rigidBody.current.linvel()
+      rigidBody.current.setLinvel({ x: 0, y: velocity.y, z: 0 }, true)
+      handleFootsteps(false, false)
+      return
+    }
 
     const { forward, backward, left, right, jump } = get()
     const velocity = rigidBody.current.linvel()
@@ -92,7 +123,7 @@ export function Player() {
 
   return (
     <>
-      <PointerLockControls />
+      {!isFocused && <PointerLockControls ref={pointerControlsRef} />}
       <RigidBody
         ref={rigidBody}
         colliders={false}
