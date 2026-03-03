@@ -10,7 +10,7 @@ import { createContext, useContext, useCallback, useRef, useSyncExternalStore } 
  *  Drives the taskbar items.
  * ═══════════════════════════════════════════════ */
 
-export type AppType = 'file-explorer' | 'internet-explorer'
+export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode'
 
 export interface XPWindowState {
   id: string

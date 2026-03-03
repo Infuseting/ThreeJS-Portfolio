@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, type MouseEvent as ReactMouseEvent } from 'react'
 import { useWM, type AppType } from './WindowManager'
 
 /* ═══════════════════════════════════════════════
@@ -197,6 +197,33 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
     setBreadcrumbs((prev) => prev.slice(0, idx + 1))
   }, [])
 
+  /* ── Open file/workspace in VS Code ── */
+  const openInVSCode = useCallback((repo: string, filePath?: string) => {
+    wm.openWindow('vscode', {
+      title: filePath ? `${filePath.split('/').pop()} - VS Code` : `${repo} - VS Code`,
+      icon: '💻',
+      w: 950,
+      h: 700,
+      payload: { repo, filePath: filePath || '' },
+    })
+  }, [wm])
+
+  /* ── Context menu state ── */
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; entry: FSEntry } | null>(null)
+
+  const onContextMenu = useCallback((e: ReactMouseEvent, entry: FSEntry) => {
+    e.preventDefault()
+    e.stopPropagation()
+    // Position relative to the file explorer content area
+    const rect = (e.currentTarget as HTMLElement).closest('table')?.parentElement?.getBoundingClientRect()
+    const x = rect ? e.clientX - rect.left : e.clientX
+    const y = rect ? e.clientY - rect.top : e.clientY
+    setCtxMenu({ x, y, entry })
+  }, [])
+
+  // Close context menu on any click
+  const closeCtxMenu = useCallback(() => setCtxMenu(null), [])
+
   /* ── Double-click handler ── */
   const onDoubleClick = useCallback(
     async (entry: FSEntry) => {
@@ -247,9 +274,12 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
           h: 650,
           payload: { url: meta.url },
         })
+      } else if (entry.type === 'file' && current.source === 'github' && current.repo) {
+        // Double-click a file in a GitHub repo → open in VS Code
+        openInVSCode(current.repo, entry.path)
       }
     },
-    [current, navigateTo, wm],
+    [current, navigateTo, wm, openInVSCode],
   )
 
   /* ── Format file size ── */
@@ -351,7 +381,7 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
       </div>
 
       {/* ── Content ── */}
-      <div style={{ flex: 1, overflow: 'auto', background: '#fff', padding: 4 }}>
+      <div onClick={closeCtxMenu} style={{ flex: 1, overflow: 'auto', background: '#fff', padding: 4, position: 'relative' }}>
         {loading && (
           <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>
             Chargement...
@@ -410,10 +440,105 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
                   key={`${entry.name}-${i}`}
                   entry={entry}
                   onDoubleClick={() => onDoubleClick(entry)}
+                  onContextMenu={(e) => onContextMenu(e as ReactMouseEvent, entry)}
                 />
               ))}
             </tbody>
           </table>
+        )}
+
+        {/* ── Context menu ── */}
+        {ctxMenu && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'absolute',
+              top: ctxMenu.y,
+              left: ctxMenu.x,
+              background: '#fff',
+              border: '1px solid #ACA899',
+              boxShadow: '2px 2px 6px rgba(0,0,0,0.25)',
+              minWidth: 180,
+              padding: '3px 0',
+              zIndex: 9999,
+              fontSize: 13,
+            }}
+          >
+            {/* File → "Ouvrir avec VS Code" */}
+            {ctxMenu.entry.type === 'file' && current.source === 'github' && current.repo && (
+              <CtxMenuItem
+                label="Ouvrir avec VS Code"
+                icon="💻"
+                onClick={() => {
+                  openInVSCode(current.repo!, ctxMenu.entry.path)
+                  closeCtxMenu()
+                }}
+              />
+            )}
+
+            {/* File → "Ouvrir" (double-click behavior) */}
+            {ctxMenu.entry.type === 'file' && (
+              <CtxMenuItem
+                label="Ouvrir"
+                icon="📄"
+                onClick={() => {
+                  onDoubleClick(ctxMenu.entry)
+                  closeCtxMenu()
+                }}
+              />
+            )}
+
+            {/* Directory → "Ouvrir" */}
+            {ctxMenu.entry.type === 'dir' && (
+              <CtxMenuItem
+                label="Ouvrir"
+                icon="📂"
+                onClick={() => {
+                  onDoubleClick(ctxMenu.entry)
+                  closeCtxMenu()
+                }}
+              />
+            )}
+
+            {/* Directory in GitHub → "Ouvrir en workspace dans VS Code" */}
+            {ctxMenu.entry.type === 'dir' && current.source === 'github' && current.repo && (
+              <CtxMenuItem
+                label="Ouvrir en workspace dans VS Code"
+                icon="💻"
+                onClick={() => {
+                  openInVSCode(current.repo!)
+                  closeCtxMenu()
+                }}
+              />
+            )}
+
+            {/* Gitlink → "Ouvrir" */}
+            {ctxMenu.entry.type === 'gitlink' && (
+              <CtxMenuItem
+                label="Ouvrir"
+                icon="📂"
+                onClick={() => {
+                  onDoubleClick(ctxMenu.entry)
+                  closeCtxMenu()
+                }}
+              />
+            )}
+
+            {/* Gitlink → "Ouvrir en workspace dans VS Code" */}
+            {ctxMenu.entry.type === 'gitlink' && (() => {
+              const meta = ctxMenu.entry.meta as { git_url?: string } | undefined
+              return meta?.git_url ? (
+                <CtxMenuItem
+                  label="Ouvrir en workspace dans VS Code"
+                  icon="💻"
+                  onClick={() => {
+                    openInVSCode(meta.git_url!)
+                    closeCtxMenu()
+                  }}
+                />
+              ) : null
+            })()}
+          </div>
         )}
       </div>
 
@@ -441,9 +566,11 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
 function FileRow({
   entry,
   onDoubleClick,
+  onContextMenu,
 }: {
   entry: FSEntry
   onDoubleClick: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }) {
   const [selected, setSelected] = useState(false)
 
@@ -451,6 +578,7 @@ function FileRow({
     <tr
       onClick={() => setSelected(true)}
       onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
       onBlur={() => setSelected(false)}
       tabIndex={0}
       style={{
@@ -479,4 +607,30 @@ function formatSize(bytes?: number): string {
   if (bytes < 1024) return `${bytes} o`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
+}
+
+/* ── Context menu item ── */
+
+function CtxMenuItem({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        padding: '4px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        background: hover ? '#316AC5' : 'transparent',
+        color: hover ? '#fff' : '#000',
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span style={{ fontSize: 14, width: 18, textAlign: 'center' }}>{icon}</span>
+      <span>{label}</span>
+    </div>
+  )
 }

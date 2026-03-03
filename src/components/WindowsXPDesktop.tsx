@@ -10,6 +10,7 @@ import { WMProvider, useWM, useWMState, type AppType, type XPWindowState } from 
 import { XPWindow } from './xp/XPWindow'
 import { FileExplorer } from './xp/FileExplorer'
 import { InternetExplorer } from './xp/InternetExplorer'
+import { VSCodeApp } from './xp/VSCodeApp'
 
 /* ═══════════════════════════════════════════════
  *  WindowsXP Desktop
@@ -113,6 +114,16 @@ function DesktopInner({ width, height, active }: { width: number; height: number
     setStartOpen(false)
   }, [wm])
 
+  const openVSCode = useCallback(() => {
+    wm.openWindow('vscode', {
+      title: 'VS Code',
+      icon: '💻',
+      w: 950,
+      h: 700,
+    })
+    setStartOpen(false)
+  }, [wm])
+
   return (
     <div
       ref={containerRef}
@@ -134,6 +145,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10, position: 'absolute', top: 0, left: 0 }}>
         <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={openFileExplorer} />
         <DesktopIcon label="Internet Explorer" icon="🌐" onDoubleClick={() => openIE()} />
+        <DesktopIcon label="VS Code" icon="📝" onDoubleClick={openVSCode} />
         <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={openFileExplorer} />
         <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => {}} />
       </div>
@@ -178,7 +190,8 @@ function DesktopInner({ width, height, active }: { width: number; height: number
           </div>
           <div style={{ padding: '6px 0' }}>
             <MenuItem icon="🌐" label="Internet Explorer" onClick={() => openIE()} />
-            <MenuItem icon="📁" label="Poste de travail" onClick={openFileExplorer} />
+            <MenuItem icon="�" label="VS Code" onClick={openVSCode} />
+            <MenuItem icon="�📁" label="Poste de travail" onClick={openFileExplorer} />
             <div style={{ borderTop: '1px solid #ccc', margin: '4px 12px' }} />
             <MenuItem icon="📁" label="Mes documents" onClick={openFileExplorer} />
           </div>
@@ -285,6 +298,14 @@ function AppContent({ win }: { win: XPWindowState }) {
       return <FileExplorer windowId={win.id} initialPath={(win.payload?.path as string) ?? ''} />
     case 'internet-explorer':
       return <InternetExplorer windowId={win.id} initialUrl={(win.payload?.url as string) ?? undefined} />
+    case 'vscode':
+      return (
+        <VSCodeApp
+          windowId={win.id}
+          repo={(win.payload?.repo as string) ?? undefined}
+          filePath={(win.payload?.filePath as string) ?? undefined}
+        />
+      )
     default:
       return <div style={{ padding: 12, color: '#666' }}>Application inconnue</div>
   }
