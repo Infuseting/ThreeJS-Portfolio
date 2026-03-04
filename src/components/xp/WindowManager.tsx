@@ -10,7 +10,7 @@ import { createContext, useContext, useCallback, useRef, useSyncExternalStore } 
  *  Drives the taskbar items.
  * ═══════════════════════════════════════════════ */
 
-export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball'
+export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv'
 
 export interface XPWindowState {
   id: string
@@ -96,7 +96,8 @@ function createWindowManager(desktopW: number, desktopH: number) {
       'cmd': 'Invite de commandes',
       'mediaplayer': 'Lecteur Windows Media',
       'paint': 'Paint',
-      'pinball': '3D Pinball - Space Cadet'
+      'pinball': '3D Pinball - Space Cadet',
+      'cv': 'Curriculum Vitae'
     }
     const icons: Record<AppType, string> = {
       'file-explorer': '📁',
@@ -108,7 +109,8 @@ function createWindowManager(desktopW: number, desktopH: number) {
       'cmd': '📟',
       'mediaplayer': '🎵',
       'paint': '🎨',
-      'pinball': '🪐'
+      'pinball': '🪐',
+      'cv': '📄'
     }
 
     const title = opts?.title ?? titles[appType]

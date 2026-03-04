@@ -117,6 +117,11 @@ function DesktopInner({ width, height, active }: { width: number; height: number
     setStartOpen(false)
   }, [wm])
 
+  const openCv = useCallback(() => {
+    wm.openWindow('cv', { title: 'Curriculum Vitae', icon: '📄', w: 800, h: 800 })
+    setStartOpen(false)
+  }, [wm])
+
   return (
     <div
       ref={containerRef}
@@ -138,6 +143,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', flexWrap: 'wrap', alignContent: 'flex-start', gap: 10, position: 'absolute', top: 0, left: 0, bottom: TASKBAR_H }}>
         <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={openFileExplorer} />
         <DesktopIcon label="Internet Explorer" icon="🌐" onDoubleClick={() => openIE()} />
+        <DesktopIcon label="Mon CV" icon="📄" onDoubleClick={openCv} />
         <DesktopIcon label="VS Code" icon="📝" onDoubleClick={openVSCode} />
         <DesktopIcon label="Démineur" icon="💣" onDoubleClick={openMinesweeper} />
         <DesktopIcon label="Slither.io" icon="🐍" onDoubleClick={openSlitherio} />
@@ -178,6 +184,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
           onOpenPaint={openPaint}
           onOpenPinball={openPinball}
           onOpenFileExplorer={openFileExplorer}
+          onOpenCv={openCv}
           onClose={() => setStartOpen(false)}
         />
       )}
@@ -206,6 +213,8 @@ function AppContent({ win }: { win: XPWindowState }) {
       return <InternetExplorer windowId={win.id} initialUrl={(win.payload?.url as string) ?? undefined} />
     case 'slitherio':
       return <iframe src="https://slither.io" title="Slither.io" style={{ width: '100%', height: '100%', border: 'none' }} />
+    case 'cv':
+      return <iframe src="/CV_SERRET_Arthur.pdf" title="Curriculum Vitae" style={{ width: '100%', height: '100%', border: 'none' }} />
     case 'paint':
       return <iframe src="https://jspaint.app" title="Paint" style={{ width: '100%', height: '100%', border: 'none' }} />
     case 'pinball':

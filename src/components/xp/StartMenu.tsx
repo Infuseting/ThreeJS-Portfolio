@@ -14,6 +14,7 @@ interface StartMenuProps {
   onOpenPaint: () => void
   onOpenPinball: () => void
   onOpenFileExplorer: () => void
+  onOpenCv: () => void
   onClose: () => void
 }
 
@@ -30,6 +31,7 @@ export function StartMenu({
   onOpenPaint,
   onOpenPinball,
   onOpenFileExplorer,
+  onOpenCv,
   onClose,
 }: StartMenuProps) {
   return (
@@ -68,6 +70,7 @@ export function StartMenu({
         <MenuItem icon="🎨" label="Paint" onClick={onOpenPaint} />
         <MenuItem icon="🪐" label="Pinball" onClick={onOpenPinball} />
         <MenuItem icon="📁" label="Poste de travail" onClick={onOpenFileExplorer} />
+        <MenuItem icon="📄" label="Mon CV" onClick={onOpenCv} />
         <div style={{ borderTop: '1px solid #ccc', margin: '4px 12px' }} />
         <MenuItem icon="📁" label="Mes documents" onClick={onOpenFileExplorer} />
       </div>
