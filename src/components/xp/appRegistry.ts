@@ -22,7 +22,6 @@ export interface AppConfig {
 }
 
 export const APP_REGISTRY: Record<AppType, AppConfig> = {
-  'minecraft': { appType: 'minecraft', title: 'Minecraft', icon: '⛏️', w: 1000, h: 700 },
   'file-explorer': { appType: 'file-explorer', title: 'Poste de travail', icon: '📁', w: 700, h: 500 },
   'internet-explorer': { appType: 'internet-explorer', title: 'Internet Explorer', icon: '🌐', w: 900, h: 650 },
   'vscode': { appType: 'vscode', title: 'VS Code', icon: '💻', w: 950, h: 700 },

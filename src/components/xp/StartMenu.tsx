@@ -12,7 +12,6 @@ interface StartMenuEntry {
 
 /** Top-level programs listed in the Start menu. */
 const MENU_ITEMS: StartMenuEntry[] = [
-  { icon: '⛏️', label: 'Minecraft', appType: 'minecraft' },
   { icon: '🌐', label: 'Internet Explorer', appType: 'internet-explorer' },
   { icon: '💻', label: 'VS Code', appType: 'vscode' },
   { icon: '💣', label: 'Démineur', appType: 'minesweeper' },

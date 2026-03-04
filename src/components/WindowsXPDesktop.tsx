@@ -138,7 +138,6 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         <DesktopIcon label="Paint" icon="🎨" onDoubleClick={() => openApp('paint')} />
         <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={() => openApp('pinball')} />
         <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={() => openApp('file-explorer')} />
-        <DesktopIcon label="Minecraft" icon="⛏️" onDoubleClick={() => openApp('minecraft')} />
         <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => openApp('recycle-bin')} />
       </div>
 
@@ -203,8 +202,6 @@ function AppContent({
   onChangeBg: (v: string) => void
 }) {
   switch (win.appType) {
-    case 'minecraft':
-      return <iframe src="https://mcraft.fun/" title="Minecraft" style={{ width: '100%', height: '100%', border: 'none' }} />
     case 'file-explorer':
       return <FileExplorer windowId={win.id} />
     case 'internet-explorer':
