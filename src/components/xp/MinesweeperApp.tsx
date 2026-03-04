@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useMinesweeper } from '../../hooks/useMinesweeper'
 import { Difficulty, CellData } from '../../utils/minesweeper'
 import { useWM } from './WindowManager'
+import { XPAlert } from './XPAlert'
 
 /* ═══════════════════════════════════════════════
  *  Minesweeper App (Windows XP style)
@@ -60,6 +61,8 @@ export function MinesweeperApp({ windowId }: MinesweeperAppProps) {
         return () => window.removeEventListener('mouseup', handleMouseUp);
     }, []);
 
+    const [showAbout, setShowAbout] = useState(false)
+
     return (
         <div
             style={{
@@ -87,7 +90,7 @@ export function MinesweeperApp({ windowId }: MinesweeperAppProps) {
                     <MenuAction label="Quitter" onClick={() => wm.closeWindow(windowId)} />
                 </DropdownMenu>
                 <DropdownMenu label="?">
-                    <MenuAction label="À propos de Démineur..." onClick={() => alert('Démineur XP Clone\nPar Infuseting')} />
+                    <MenuAction label="À propos de Démineur..." onClick={() => setShowAbout(true)} />
                 </DropdownMenu>
             </div>
 
@@ -187,6 +190,15 @@ export function MinesweeperApp({ windowId }: MinesweeperAppProps) {
                     ))}
                 </div>
             </div>
+
+            {showAbout && (
+                <XPAlert
+                    title="À propos de Démineur"
+                    icon="💣"
+                    message={"Démineur XP Clone\nPar Infuseting\n\n© 2026 Infuseting. Tous droits réservés."}
+                    onClose={() => setShowAbout(false)}
+                />
+            )}
         </div>
     )
 }

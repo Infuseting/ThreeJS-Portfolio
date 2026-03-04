@@ -1,7 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useWindowState } from './WindowManager'
+import { useWM, useWindowState } from './WindowManager'
+import { MenuBar, MenuDef } from './MenuBar'
+import { XPAlert } from './XPAlert'
+import { XPToolbarButton } from './shared/XPToolbarButton'
 
 /* ═══════════════════════════════════════════════
  *  Outlook Express App
@@ -66,11 +69,74 @@ const MOCK_EMAILS: Record<FolderType, Email[]> = {
 
 export function OutlookExpressApp({ windowId }: OutlookExpressAppProps) {
     const win = useWindowState(windowId)
+    const wm = useWM()
     const [activeFolder, setActiveFolder] = useState<FolderType>('inbox')
     const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null)
+    const [alert, setAlert] = useState<string | null>(null)
 
     // Create a local copy of emails to allow marking as read
     const [emails, setEmails] = useState(MOCK_EMAILS)
+
+    const menus: MenuDef[] = [
+        {
+            label: 'Fichier',
+            items: [
+                { label: 'Nouveau', onClick: () => handleNewMail() },
+                { label: 'Imprimer', disabled: true },
+                { divider: true },
+                { label: 'Se déconnecter', disabled: true },
+                { label: 'Quitter', onClick: () => wm.closeWindow(windowId) }
+            ]
+        },
+        {
+            label: 'Édition',
+            items: [
+                { label: 'Copier', disabled: true },
+                { label: 'Sélectionner tout', disabled: true },
+                { divider: true },
+                { label: 'Marquer comme lu', onClick: () => { if (selectedEmailId) handleSelectEmail(selectedEmailId) }, disabled: !selectedEmailId },
+                {
+                    label: 'Tout marquer comme lu', onClick: () => {
+                        setEmails(prev => {
+                            const next = { ...prev }
+                            next[activeFolder] = next[activeFolder].map(e => ({ ...e, read: true }))
+                            return next
+                        })
+                    }
+                }
+            ]
+        },
+        {
+            label: 'Affichage',
+            items: [
+                { label: 'Mise en page', disabled: true },
+                { label: 'Volet de visualisation', disabled: true }
+            ]
+        },
+        {
+            label: 'Outils',
+            items: [
+                { label: 'Carnet d\'adresses...', disabled: true },
+                { label: 'Options...', disabled: true }
+            ]
+        },
+        {
+            label: 'Message',
+            items: [
+                { label: 'Nouveau message', onClick: () => handleNewMail() },
+                { label: 'Répondre à l\'expéditeur', disabled: !selectedEmailId },
+                { label: 'Transférer', disabled: !selectedEmailId }
+            ]
+        },
+        {
+            label: '?',
+            items: [
+                { label: 'Sommaire et index', disabled: true },
+                { divider: true },
+                { label: 'À propos d\'Outlook Express', onClick: () => setAlert('Outlook Express (Version Web)') }
+            ]
+        }
+    ]
 
     if (!win) return null
 
@@ -105,24 +171,24 @@ export function OutlookExpressApp({ windowId }: OutlookExpressAppProps) {
             userSelect: 'none'
         }}>
             {/* Menu Bar */}
-            <div style={{ display: 'flex', backgroundColor: '#ECE9D8', padding: '2px 4px' }}>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Fichier</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Édition</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Affichage</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Outils</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Message</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>?</div>
-            </div>
+            <MenuBar menus={menus} />
+            {alert && (
+                <XPAlert
+                    title="Outlook Express"
+                    message={alert}
+                    onClose={() => setAlert(null)}
+                />
+            )}
 
             {/* Toolbar */}
             <div style={{ display: 'flex', gap: 2, padding: '4px 8px', borderTop: '1px solid #FFF', borderBottom: '1px solid #ACA899' }}>
-                <ToolbarButton icon="✉️" label="Nouveau message" onClick={handleNewMail} />
+                <XPToolbarButton icon="✉️" label="Nouveau message" onClick={handleNewMail} vertical />
                 <div style={{ width: 1, backgroundColor: '#ACA899', margin: '0 4px' }} />
-                <ToolbarButton icon="🖨️" label="Imprimer" onClick={() => { }} disabled />
-                <ToolbarButton icon="🗑️" label="Supprimer" onClick={() => { }} disabled />
+                <XPToolbarButton icon="🖨️" label="Imprimer" onClick={() => { }} disabled vertical />
+                <XPToolbarButton icon="🗑️" label="Supprimer" onClick={() => { }} disabled vertical />
                 <div style={{ width: 1, backgroundColor: '#ACA899', margin: '0 4px' }} />
-                <ToolbarButton icon="📤" label="Envoyer/Recevoir" onClick={() => { }} />
-                <ToolbarButton icon="📔" label="Adresses" onClick={() => { }} />
+                <XPToolbarButton icon="📤" label="Envoyer/Recevoir" onClick={() => { }} vertical />
+                <XPToolbarButton icon="📔" label="Adresses" onClick={() => { }} vertical />
             </div>
 
             {/* Main Content Area */}
@@ -236,35 +302,6 @@ export function OutlookExpressApp({ windowId }: OutlookExpressAppProps) {
                     <div style={{ color: 'red' }}>{emails.inbox.filter(e => !e.read).length} non lu(s)</div>
                 )}
             </div>
-        </div>
-    )
-}
-
-function ToolbarButton({ icon, label, onClick, disabled = false }: { icon: string, label: string, onClick: () => void, disabled?: boolean }) {
-    const [hover, setHover] = useState(false)
-    const [active, setActive] = useState(false)
-
-    return (
-        <div
-            onClick={disabled ? undefined : onClick}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => { setHover(false); setActive(false) }}
-            onMouseDown={() => setActive(true)}
-            onMouseUp={() => setActive(false)}
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '2px 4px',
-                cursor: disabled ? 'default' : 'pointer',
-                opacity: disabled ? 0.5 : 1,
-                border: (hover && !disabled) ? '1px solid' : '1px solid transparent',
-                borderColor: active ? '#ACA899 #FFF #FFF #ACA899' : '#FFF #ACA899 #ACA899 #FFF',
-                backgroundColor: (hover && !disabled) ? '#ECE9D8' : 'transparent',
-            }}
-        >
-            <div style={{ fontSize: 24, marginBottom: 2 }}>{icon}</div>
-            <div style={{ fontSize: 11 }}>{label}</div>
         </div>
     )
 }

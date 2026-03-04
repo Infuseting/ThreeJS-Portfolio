@@ -1,47 +1,47 @@
 'use client'
 
 import { MenuItem } from './MenuItem'
+import type { AppType } from './appRegistry'
 
-interface StartMenuProps {
+/** Describes one entry in the Start menu. */
+interface StartMenuEntry {
+  icon: string
+  label: string
+  appType: AppType
+}
+
+/** Top-level programs listed in the Start menu. */
+const MENU_ITEMS: StartMenuEntry[] = [
+  { icon: '⛏️', label: 'Minecraft', appType: 'minecraft' },
+  { icon: '🌐', label: 'Internet Explorer', appType: 'internet-explorer' },
+  { icon: '💻', label: 'VS Code', appType: 'vscode' },
+  { icon: '💣', label: 'Démineur', appType: 'minesweeper' },
+  { icon: '🐍', label: 'Slither.io', appType: 'slitherio' },
+  { icon: '📝', label: 'Bloc-notes', appType: 'notepad' },
+  { icon: '📟', label: 'Invite de commandes', appType: 'cmd' },
+  { icon: '📊', label: 'Gestionnaire des tâches', appType: 'taskmgr' },
+  { icon: '📧', label: 'Outlook Express', appType: 'outlook' },
+  { icon: '🐙', label: 'Git Tracker', appType: 'git-tracker' },
+  { icon: '🎵', label: 'Lofi Radio', appType: 'mediaplayer' },
+  { icon: '🎨', label: 'Paint', appType: 'paint' },
+  { icon: '🪐', label: 'Pinball', appType: 'pinball' },
+  { icon: '📄', label: 'Mon CV', appType: 'cv' },
+]
+
+/** Bottom "Places" section of the Start menu. */
+const PLACES_ITEMS: StartMenuEntry[] = [
+  { icon: '📁', label: 'Mes documents', appType: 'file-explorer' },
+  { icon: '⚙️', label: 'Panneau de configuration', appType: 'control-panel' },
+]
+
+export interface StartMenuProps {
   taskbarH: number
-  onOpenIE: () => void
-  onOpenVSCode: () => void
-  onOpenMinesweeper: () => void
-  onOpenSlitherio: () => void
-  onOpenNotepad: () => void
-  onOpenCmd: () => void
-  onOpenMediaPlayer: () => void
-  onOpenPaint: () => void
-  onOpenPinball: () => void
-  onOpenFileExplorer: () => void
-  onOpenCv: () => void
-  onOpenTaskMgr: () => void
-  onOpenOutlook: () => void
-  onOpenControlPanel: () => void
-  onOpenGitTracker: () => void
+  openApp: (appType: AppType) => void
   onClose: () => void
 }
 
 /** The Windows XP Start menu popup. */
-export function StartMenu({
-  taskbarH,
-  onOpenIE,
-  onOpenVSCode,
-  onOpenMinesweeper,
-  onOpenSlitherio,
-  onOpenNotepad,
-  onOpenCmd,
-  onOpenMediaPlayer,
-  onOpenPaint,
-  onOpenPinball,
-  onOpenFileExplorer,
-  onOpenCv,
-  onOpenTaskMgr,
-  onOpenOutlook,
-  onOpenControlPanel,
-  onOpenGitTracker,
-  onClose,
-}: StartMenuProps) {
+export function StartMenu({ taskbarH, openApp, onClose }: StartMenuProps) {
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -67,23 +67,14 @@ export function StartMenu({
       </div>
 
       {/* Menu items */}
-      <div style={{ padding: '6px 0' }}>
-        <MenuItem icon="🌐" label="Internet Explorer" onClick={onOpenIE} />
-        <MenuItem icon="💻" label="VS Code" onClick={onOpenVSCode} />
-        <MenuItem icon="💣" label="Démineur" onClick={onOpenMinesweeper} />
-        <MenuItem icon="🐍" label="Slither.io" onClick={onOpenSlitherio} />
-        <MenuItem icon="📝" label="Bloc-notes" onClick={onOpenNotepad} />
-        <MenuItem icon="📟" label="Invite de commandes" onClick={onOpenCmd} />
-        <MenuItem icon="📊" label="Gestionnaire des tâches" onClick={onOpenTaskMgr} />
-        <MenuItem icon="📧" label="Outlook Express" onClick={onOpenOutlook} />
-        <MenuItem icon="🐙" label="Git Tracker" onClick={onOpenGitTracker} />
-        <MenuItem icon="🎵" label="Lofi Radio" onClick={onOpenMediaPlayer} />
-        <MenuItem icon="🎨" label="Paint" onClick={onOpenPaint} />
-        <MenuItem icon="🪐" label="Pinball" onClick={onOpenPinball} />
-        <MenuItem icon="📄" label="Mon CV" onClick={onOpenCv} />
+      <div style={{ padding: '6px 0', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+        {MENU_ITEMS.map(({ icon, label, appType }) => (
+          <MenuItem key={appType} icon={icon} label={label} onClick={() => openApp(appType)} />
+        ))}
         <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <MenuItem icon="📁" label="Mes documents" onClick={onOpenFileExplorer} />
-          <MenuItem icon="⚙️" label="Panneau de configuration" onClick={onOpenControlPanel} />
+          {PLACES_ITEMS.map(({ icon, label, appType }) => (
+            <MenuItem key={appType} icon={icon} label={label} onClick={() => openApp(appType)} />
+          ))}
         </div>
         <div style={{ height: 1, backgroundColor: '#ACA899', margin: '8px 0' }} />
       </div>

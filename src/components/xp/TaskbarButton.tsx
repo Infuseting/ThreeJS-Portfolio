@@ -26,11 +26,11 @@ export function TaskbarButton({ win, onClick, isFocused, taskbarH }: TaskbarButt
         color: isFocused ? '#000' : '#fff',
         fontSize: 13,
         cursor: 'pointer',
-        maxWidth: 160,
+        flex: '0 1 160px',
+        minWidth: 40,
         overflow: 'hidden',
         whiteSpace: 'nowrap',
         textOverflow: 'ellipsis',
-        flexShrink: 0,
       }}
     >
       <span style={{ fontSize: 14 }}>{win.icon}</span>

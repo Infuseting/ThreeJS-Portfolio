@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useCallback, useRef, useSyncExternalStore } from 'react'
+import { APP_REGISTRY } from './appRegistry'
 
 /* ═══════════════════════════════════════════════
  *  XP Window Manager
@@ -10,7 +11,7 @@ import { createContext, useContext, useCallback, useRef, useSyncExternalStore } 
  *  Drives the taskbar items.
  * ═══════════════════════════════════════════════ */
 
-export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv' | 'taskmgr' | 'outlook' | 'control-panel' | 'git-tracker' | 'recycle-bin'
+export type AppType = 'minecraft' | 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv' | 'taskmgr' | 'outlook' | 'control-panel' | 'git-tracker' | 'recycle-bin' | 'volume-mixer' | 'datetime'
 
 export interface XPWindowState {
   id: string
@@ -74,57 +75,23 @@ function createWindowManager(desktopW: number, desktopH: number) {
     icon?: string
     w?: number
     h?: number
+    x?: number
+    y?: number
     isFixedSize?: boolean
     payload?: Record<string, unknown>
   }) {
     const id = nextId()
-    const w = opts?.w ?? 700
-    const h = opts?.h ?? 500
+    const config = APP_REGISTRY[appType]
+    const w = opts?.w ?? config?.w ?? 700
+    const h = opts?.h ?? config?.h ?? 500
     // Cascade offset based on number of existing windows
     const cascade = (state.windows.length % 8) * 30
-    const x = clamp(40 + cascade, 0, desktopW - w)
-    const y = clamp(40 + cascade, 0, desktopH - 60)
+    const x = opts?.x ?? clamp(40 + cascade, 0, desktopW - w)
+    const y = opts?.y ?? clamp(40 + cascade, 0, desktopH - 60)
     const zIndex = state.nextZ
 
-    const titles: Record<AppType, string> = {
-      'file-explorer': 'Poste de travail',
-      'internet-explorer': 'Internet Explorer',
-      'vscode': 'VS Code',
-      'minesweeper': 'Démineur',
-      'slitherio': 'Slither.io',
-      'notepad': 'Bloc-notes',
-      'cmd': 'Invite de commandes',
-      'mediaplayer': 'Lecteur Windows Media',
-      'paint': 'Paint',
-      'pinball': '3D Pinball - Space Cadet',
-      'cv': 'Curriculum Vitae',
-      'taskmgr': 'Gestionnaire des tâches de Windows',
-      'outlook': 'Outlook Express',
-      'control-panel': 'Panneau de configuration',
-      'git-tracker': 'Git Tracker',
-      'recycle-bin': 'Corbeille',
-    }
-    const icons: Record<AppType, string> = {
-      'file-explorer': '📁',
-      'internet-explorer': '🌐',
-      'vscode': '💻',
-      'minesweeper': '💣',
-      'slitherio': '🐍',
-      'notepad': '📝',
-      'cmd': '📟',
-      'mediaplayer': '🎵',
-      'paint': '🎨',
-      'pinball': '🪐',
-      'cv': '📄',
-      'taskmgr': '📊',
-      'outlook': '📧',
-      'control-panel': '⚙️',
-      'git-tracker': '🐙',
-      'recycle-bin': '🗑️',
-    }
-
-    const title = opts?.title ?? titles[appType]
-    const icon = opts?.icon ?? icons[appType]
+    const title = opts?.title ?? config?.title ?? appType
+    const icon = opts?.icon ?? config?.icon ?? '📄'
 
     const win: XPWindowState = {
       id, appType, title, icon, x, y, w, h,
@@ -238,7 +205,7 @@ function createWindowManager(desktopW: number, desktopH: number) {
     emit()
   }
 
-  return {
+  const wm = {
     subscribe,
     getSnapshot,
     openWindow,
@@ -250,6 +217,11 @@ function createWindowManager(desktopW: number, desktopH: number) {
     resizeWindow,
     updateTitle,
   }
+
+  // Open Notepad by default
+  wm.openWindow('notepad')
+
+  return wm
 }
 
 export type WindowManager = ReturnType<typeof createWindowManager>

@@ -7,11 +7,13 @@ interface TaskbarProps {
   taskbarH: number
   startOpen: boolean
   onToggleStart: () => void
+  onOpenVolumeMixer: () => void
+  onOpenDateTime: () => void
   clock: string
 }
 
 /** The XP-style taskbar at the bottom of the desktop. */
-export function Taskbar({ taskbarH, startOpen, onToggleStart, clock }: TaskbarProps) {
+export function Taskbar({ taskbarH, startOpen, onToggleStart, onOpenVolumeMixer, onOpenDateTime, clock }: TaskbarProps) {
   const wm = useWM()
   const wmState = useWMState()
 
@@ -48,7 +50,13 @@ export function Taskbar({ taskbarH, startOpen, onToggleStart, clock }: TaskbarPr
       </button>
 
       {/* Window buttons */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 6px', gap: 3, overflow: 'hidden' }}>
+      <div
+        className="xp-taskbar-scroll"
+        style={{
+          flex: 1, display: 'flex', alignItems: 'center', padding: '0 6px', gap: 3,
+          overflowX: 'auto', overflowY: 'hidden', whiteSpace: 'nowrap', scrollbarWidth: 'none'
+        }}
+      >
         {wmState.windows.map((win) => (
           <TaskbarButton
             key={win.id}
@@ -75,8 +83,8 @@ export function Taskbar({ taskbarH, startOpen, onToggleStart, clock }: TaskbarPr
         padding: '0 10px', gap: 6, fontSize: 13, color: '#fff',
         borderLeft: '1px solid #0053AA',
       }}>
-        <span>🔊</span>
-        <span>{clock}</span>
+        <span onClick={(e) => { e.stopPropagation(); onOpenVolumeMixer() }} style={{ cursor: 'pointer' }}>🔊</span>
+        <span onClick={(e) => { e.stopPropagation(); onOpenDateTime() }} style={{ cursor: 'pointer' }}>{clock}</span>
       </div>
     </div>
   )

@@ -1,7 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useWindowState } from './WindowManager'
+import { useWM, useWindowState } from './WindowManager'
+import { MenuBar, MenuDef } from './MenuBar'
+import { XPAlert } from './XPAlert'
+import { XPToolbarButton } from './shared/XPToolbarButton'
 
 /* ═══════════════════════════════════════════════
  *  Recycle Bin App (Corbeille)
@@ -62,11 +65,67 @@ const INITIAL_FILES: DeletedFile[] = [
 
 export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
     const win = useWindowState(windowId)
+    const wm = useWM()
     const [files, setFiles] = useState<DeletedFile[]>(INITIAL_FILES)
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
 
     // Custom dialog for easter eggs
     const [alert, setAlert] = useState<{ title: string, message: string } | null>(null)
+
+    const menus: MenuDef[] = [
+        {
+            label: 'Fichier',
+            items: [
+                { label: 'Restaurer', disabled: selectedFileId === null },
+                { divider: true },
+                { label: 'Vider la corbeille', onClick: () => setFiles([]), disabled: files.length === 0 },
+                { divider: true },
+                { label: 'Fermer', onClick: () => wm.closeWindow(windowId) }
+            ]
+        },
+        {
+            label: 'Édition',
+            items: [
+                { label: 'Annuler', disabled: true },
+                { divider: true },
+                { label: 'Couper', disabled: true },
+                { label: 'Copier', disabled: true },
+                { label: 'Coller', disabled: true },
+                { divider: true },
+                { label: 'Sélectionner tout', onClick: () => { if (files.length > 0) setSelectedFileId(files[0].id) } }
+            ]
+        },
+        {
+            label: 'Affichage',
+            items: [
+                { label: 'Barres d\'outils', disabled: true },
+                { label: 'Barre d\'état', disabled: true },
+                { divider: true },
+                { label: 'Actualiser', onClick: () => setAlert({ title: 'Info', message: 'Actualisé !' }) }
+            ]
+        },
+        {
+            label: 'Favoris',
+            items: [
+                { label: 'Ajouter aux favoris...', disabled: true }
+            ]
+        },
+        {
+            label: 'Outils',
+            items: [
+                { label: 'Connecter un lecteur réseau...', disabled: true },
+                { label: 'Options des dossiers...', disabled: true }
+            ]
+        },
+        {
+            label: '?',
+            items: [
+                { label: 'Centre d\'aide et de support', disabled: true },
+                { divider: true },
+                { label: 'À propos de Windows', onClick: () => setAlert({ title: 'À propos', message: 'Corbeille Windows XP (Version Portfolio)' }) }
+            ]
+        }
+    ]
 
     if (!win) return null
 
@@ -105,21 +164,21 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
             userSelect: 'none'
         }}>
             {/* Menu Bar */}
-            <div style={{ display: 'flex', backgroundColor: '#ECE9D8', padding: '2px 4px', borderBottom: '1px solid #ACA899' }}>
-                <div style={{ padding: '2px 6px' }}>Fichier</div>
-                <div style={{ padding: '2px 6px' }}>Édition</div>
-                <div style={{ padding: '2px 6px' }}>Affichage</div>
-                <div style={{ padding: '2px 6px' }}>Favoris</div>
-                <div style={{ padding: '2px 6px' }}>Outils</div>
-                <div style={{ padding: '2px 6px' }}>?</div>
-            </div>
+            <MenuBar menus={menus} />
+            {alert && (
+                <XPAlert
+                    title={alert.title}
+                    message={alert.message}
+                    onClose={() => setAlert(null)}
+                />
+            )}
 
             {/* Toolbar */}
             <div style={{ display: 'flex', gap: 2, padding: '4px 8px', backgroundColor: '#ECE9D8', borderTop: '1px solid #FFF', borderBottom: '1px solid #ACA899' }}>
-                <ToolbarButton icon="⬅️" label="Précédente" disabled />
-                <ToolbarButton icon="➡️" label="Suivante" disabled />
+                <XPToolbarButton icon="⬅️" label="Précédente" disabled />
+                <XPToolbarButton icon="➡️" label="Suivante" disabled />
                 <div style={{ width: 1, backgroundColor: '#ACA899', margin: '0 4px' }} />
-                <ToolbarButton icon="🗑️" label="Vider..." onClick={handleEmptyBin} disabled={files.length === 0} />
+                <XPToolbarButton icon="🗑️" label="Vider..." onClick={handleEmptyBin} disabled={files.length === 0} />
             </div>
 
             {/* Address Bar */}
@@ -240,85 +299,17 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
 
             {/* Custom Alert Dialog */}
             {alert && (
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.1)', zIndex: 10,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                    <div style={{
-                        width: 350, backgroundColor: '#ECE9D8', border: '1px solid #0055EA',
-                        boxShadow: '2px 2px 10px rgba(0,0,0,0.5)',
-                        display: 'flex', flexDirection: 'column'
-                    }}>
-                        <div style={{
-                            background: 'linear-gradient(90deg, #0A246A 0%, #A6C2F7 100%)',
-                            color: 'white', fontWeight: 'bold', padding: '4px 6px',
-                            borderBottom: '1px solid #0055EA', display: 'flex', justifyContent: 'space-between'
-                        }}>
-                            <span>{alert.title}</span>
-                            <span
-                                style={{ backgroundColor: '#ECA0A0', color: '#FFF', border: '1px solid #FFF', padding: '0 4px', cursor: 'pointer', borderRadius: 2 }}
-                                onClick={() => setAlert(null)}
-                            >X</span>
-                        </div>
-
-                        <div style={{ padding: 16, display: 'flex', gap: 16 }}>
-                            <div style={{ fontSize: 32 }}>⚠️</div>
-                            <div style={{ flex: 1 }}>{alert.message}</div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, padding: '0 16px 16px' }}>
-                            {alert.title === 'Vider la corbeille' ? (
-                                <>
-                                    <button onClick={confirmEmpty} style={btnStyle}>Oui</button>
-                                    <button onClick={() => setAlert(null)} style={btnStyle}>Non</button>
-                                </>
-                            ) : (
-                                <button onClick={() => setAlert(null)} style={btnStyle}>OK</button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <XPAlert
+                    title={alert.title}
+                    message={alert.message}
+                    icon={alert.title === 'Vider la corbeille' ? '⚠️' : '⚠️'}
+                    buttons={alert.title === 'Vider la corbeille' ? [
+                        { label: 'Oui', onClick: confirmEmpty },
+                        { label: 'Non', onClick: () => setAlert(null) }
+                    ] : undefined}
+                    onClose={() => setAlert(null)}
+                />
             )}
         </div>
     )
-}
-
-function ToolbarButton({ icon, label, onClick, disabled = false }: { icon: string, label: string, onClick?: () => void, disabled?: boolean }) {
-    const [hover, setHover] = useState(false)
-    const [active, setActive] = useState(false)
-
-    return (
-        <div
-            onClick={disabled ? undefined : onClick}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => { setHover(false); setActive(false) }}
-            onMouseDown={() => setActive(true)}
-            onMouseUp={() => setActive(false)}
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '2px 6px',
-                cursor: disabled ? 'default' : 'pointer',
-                opacity: disabled ? 0.5 : 1,
-                border: (hover && !disabled) ? '1px solid' : '1px solid transparent',
-                borderColor: active ? '#ACA899 #FFF #FFF #ACA899' : '#FFF #ACA899 #ACA899 #FFF',
-                backgroundColor: (hover && !disabled) ? 'rgba(0,0,0,0.05)' : 'transparent',
-            }}
-        >
-            <div style={{ fontSize: 18, marginRight: 4 }}>{icon}</div>
-            <div style={{ fontSize: 11 }}>{label}</div>
-        </div>
-    )
-}
-
-const btnStyle = {
-    minWidth: 70,
-    padding: '4px 12px',
-    fontFamily: 'Tahoma, sans-serif',
-    fontSize: 11,
-    cursor: 'pointer',
-    backgroundColor: '#ECE9D8',
-    border: '1px solid #003399',
-    borderRadius: 3
 }

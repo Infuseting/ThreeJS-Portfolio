@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useWindowState } from './WindowManager'
+import { useWM, useWindowState } from './WindowManager'
+import { MenuBar, MenuDef } from './MenuBar'
+import { XPAlert } from './XPAlert'
 
 /* ═══════════════════════════════════════════════
  *  Git Tracker App (GitHub API)
@@ -22,10 +24,53 @@ interface RepoData {
 }
 
 export function GitTrackerApp({ windowId }: GitTrackerAppProps) {
+    const wm = useWM()
     const win = useWindowState(windowId)
     const [repos, setRepos] = useState<RepoData[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [alert, setAlert] = useState<string | null>(null)
+
+    const menus: MenuDef[] = [
+        {
+            label: 'Fichier',
+            items: [
+                { label: 'Fermer', onClick: () => wm.closeWindow(windowId) }
+            ]
+        },
+        {
+            label: 'Édition',
+            items: [
+                { label: 'Couper', disabled: true },
+                { label: 'Copier', disabled: true },
+                { label: 'Coller', disabled: true }
+            ]
+        },
+        {
+            label: 'Affichage',
+            items: [
+                { label: 'Actualiser', onClick: () => { setLoading(true); setRepos([]); /* will trigger effect indirectly if we changed key, but let's just show an alert or let it re-fetch */ } }
+            ]
+        },
+        {
+            label: 'Favoris',
+            items: [
+                { label: 'Ajouter aux favoris...', disabled: true }
+            ]
+        },
+        {
+            label: 'Outils',
+            items: [
+                { label: 'Options Internet...', disabled: true }
+            ]
+        },
+        {
+            label: '?',
+            items: [
+                { label: 'À propos de Git Tracker', onClick: () => setAlert('Git Tracker XP\nAffiche les dépôts publics GitHub.') }
+            ]
+        }
+    ]
 
     useEffect(() => {
         let isMounted = true
@@ -76,14 +121,14 @@ export function GitTrackerApp({ windowId }: GitTrackerAppProps) {
         }}>
             {/* Menu & Toolbar */}
             <div style={{ backgroundColor: '#ECE9D8', borderBottom: '1px solid #ACA899' }}>
-                <div style={{ display: 'flex', padding: '2px 4px' }}>
-                    <div style={{ padding: '2px 6px' }}>Fichier</div>
-                    <div style={{ padding: '2px 6px' }}>Édition</div>
-                    <div style={{ padding: '2px 6px' }}>Affichage</div>
-                    <div style={{ padding: '2px 6px' }}>Favoris</div>
-                    <div style={{ padding: '2px 6px' }}>Outils</div>
-                    <div style={{ padding: '2px 6px' }}>?</div>
-                </div>
+                <MenuBar menus={menus} />
+                {alert && (
+                    <XPAlert
+                        title="Git Tracker"
+                        message={alert}
+                        onClose={() => setAlert(null)}
+                    />
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', padding: '4px 8px', borderTop: '1px solid #FFF', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span style={{ fontSize: 20 }}>⬅️</span> Précédente

@@ -23,7 +23,13 @@ import { TaskManagerApp } from './xp/TaskManagerApp'
 import { OutlookExpressApp } from './xp/OutlookExpressApp'
 import { ControlPanelApp } from './xp/ControlPanelApp'
 import { GitTrackerApp } from './xp/GitTrackerApp'
+import { DateTimePropApp } from './xp/DateTimePropApp'
 import { RecycleBinApp } from './xp/RecycleBinApp'
+import { VolumeMixerApp } from './xp/VolumeMixerApp'
+import { VolumeProvider } from './xp/VolumeContext'
+import { AudioIframe } from './xp/AudioIframe'
+import { useOpenApp } from '@/hooks/useOpenApp'
+import type { AppType } from './xp/WindowManager'
 
 /* ═══════════════════════════════════════════════
  *  WindowsXP Desktop
@@ -44,7 +50,9 @@ export function WindowsXPDesktop({
 }: WindowsXPDesktopProps) {
   return (
     <WMProvider desktopW={width} desktopH={height}>
-      <DesktopInner width={width} height={height} active={active} />
+      <VolumeProvider>
+        <DesktopInner width={width} height={height} active={active} />
+      </VolumeProvider>
     </WMProvider>
   )
 }
@@ -66,92 +74,33 @@ function DesktopInner({ width, height, active }: { width: number; height: number
   useHideNativeCursor(active)
   useVirtualCursorTracking(active, containerRef, width, height, setCursorPos)
 
-  /* ── Open app helpers ── */
-  const openFileExplorer = useCallback(() => {
-    wm.openWindow('file-explorer', { title: 'Poste de travail', icon: '📁', w: 700, h: 500 })
-    setStartOpen(false)
-  }, [wm])
+  const closeStart = useCallback(() => setStartOpen(false), [])
+  const openApp = useOpenApp(closeStart)
 
-  const openMinesweeper = useCallback(() => {
-    wm.openWindow('minesweeper', { title: 'Démineur', icon: '💣', w: 200, h: 300 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openSlitherio = useCallback(() => {
-    wm.openWindow('slitherio', { title: 'Slither.io', icon: '🐍', w: 1000, h: 700 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openNotepad = useCallback(() => {
-    wm.openWindow('notepad', { title: 'Bloc-notes', icon: '📝', w: 600, h: 400 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openCmd = useCallback(() => {
-    wm.openWindow('cmd', { title: 'Invite de commandes', icon: '📟', w: 600, h: 400 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openMediaPlayer = useCallback(() => {
-    wm.openWindow('mediaplayer', { title: 'Lecteur Windows Media', icon: '🎵', w: 320, h: 240 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openPaint = useCallback(() => {
-    wm.openWindow('paint', { title: 'Paint', icon: '🎨', w: 800, h: 600 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openPinball = useCallback(() => {
-    wm.openWindow('pinball', { title: '3D Pinball - Space Cadet', icon: '🪐', w: 600, h: 446, isFixedSize: true })
-    setStartOpen(false)
-  }, [wm])
-
+  /* ── Specialized openers for apps needing custom overrides ── */
   const openIE = useCallback((url?: string) => {
-    wm.openWindow('internet-explorer', {
-      title: 'Internet Explorer',
-      icon: '🌐',
-      w: 900,
-      h: 650,
-      payload: url ? { url } : undefined,
+    openApp('internet-explorer', url ? { payload: { url } } : undefined)
+  }, [openApp])
+
+  const openVolumeMixer = useCallback(() => {
+    const mixerW = 400
+    const mixerH = 300
+    openApp('volume-mixer', {
+      w: mixerW, h: mixerH,
+      x: width - mixerW - 4,
+      y: height - mixerH - TASKBAR_H - 4,
     })
-    setStartOpen(false)
-  }, [wm])
+  }, [openApp, width, height])
 
-  const openVSCode = useCallback(() => {
-    wm.openWindow('vscode', { title: 'VS Code', icon: '💻', w: 950, h: 700 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openCv = useCallback(() => {
-    wm.openWindow('cv', { title: 'Curriculum Vitae', icon: '📄', w: 800, h: 800 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openTaskMgr = useCallback(() => {
-    wm.openWindow('taskmgr', { title: 'Gestionnaire des tâches de Windows', icon: '📊', w: 450, h: 450, isFixedSize: true })
-    setStartOpen(false)
-  }, [wm])
-
-  const openOutlook = useCallback(() => {
-    wm.openWindow('outlook', { title: 'Outlook Express', icon: '📧', w: 800, h: 600 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openControlPanel = useCallback(() => {
-    wm.openWindow('control-panel', { title: 'Panneau de configuration', icon: '⚙️', w: 500, h: 400 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openGitTracker = useCallback(() => {
-    wm.openWindow('git-tracker', { title: 'Git Tracker', icon: '🐙', w: 700, h: 500 })
-    setStartOpen(false)
-  }, [wm])
-
-  const openRecycleBin = useCallback(() => {
-    wm.openWindow('recycle-bin', { title: 'Corbeille', icon: '🗑️', w: 600, h: 450 })
-    setStartOpen(false)
-  }, [wm])
+  const openDateTime = useCallback(() => {
+    const dtW = 420
+    const dtH = 450
+    openApp('datetime', {
+      w: dtW, h: dtH,
+      x: width - dtW - 4,
+      y: height - dtH - TASKBAR_H - 4,
+    })
+  }, [openApp, width, height])
 
   return (
     <div
@@ -174,22 +123,23 @@ function DesktopInner({ width, height, active }: { width: number; height: number
     >
       {/* ─── Desktop icons ─── */}
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', flexWrap: 'wrap', alignContent: 'flex-start', gap: 10, position: 'absolute', top: 0, left: 0, bottom: TASKBAR_H }}>
-        <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={openFileExplorer} />
+        <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={() => openApp('file-explorer')} />
         <DesktopIcon label="Internet Explorer" icon="🌐" onDoubleClick={() => openIE()} />
-        <DesktopIcon label="Outlook Express" icon="📧" onDoubleClick={openOutlook} />
-        <DesktopIcon label="Mon CV" icon="📄" onDoubleClick={openCv} />
-        <DesktopIcon label="VS Code" icon="💻" onDoubleClick={openVSCode} />
-        <DesktopIcon label="Git Tracker" icon="🐙" onDoubleClick={openGitTracker} />
-        <DesktopIcon label="Gestionnaire des tâches" icon="📊" onDoubleClick={openTaskMgr} />
-        <DesktopIcon label="Démineur" icon="💣" onDoubleClick={openMinesweeper} />
-        <DesktopIcon label="Slither.io" icon="🐍" onDoubleClick={openSlitherio} />
-        <DesktopIcon label="Bloc-notes" icon="📝" onDoubleClick={openNotepad} />
-        <DesktopIcon label="Invite de cmd" icon="📟" onDoubleClick={openCmd} />
-        <DesktopIcon label="Lofi Radio" icon="🎵" onDoubleClick={openMediaPlayer} />
-        <DesktopIcon label="Paint" icon="🎨" onDoubleClick={openPaint} />
-        <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={openPinball} />
-        <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={openFileExplorer} />
-        <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={openRecycleBin} />
+        <DesktopIcon label="Outlook Express" icon="📧" onDoubleClick={() => openApp('outlook')} />
+        <DesktopIcon label="Mon CV" icon="📄" onDoubleClick={() => openApp('cv')} />
+        <DesktopIcon label="VS Code" icon="💻" onDoubleClick={() => openApp('vscode')} />
+        <DesktopIcon label="Git Tracker" icon="🐙" onDoubleClick={() => openApp('git-tracker')} />
+        <DesktopIcon label="Gestionnaire des tâches" icon="📊" onDoubleClick={() => openApp('taskmgr')} />
+        <DesktopIcon label="Démineur" icon="💣" onDoubleClick={() => openApp('minesweeper')} />
+        <DesktopIcon label="Slither.io" icon="🐍" onDoubleClick={() => openApp('slitherio')} />
+        <DesktopIcon label="Bloc-notes" icon="📝" onDoubleClick={() => openApp('notepad')} />
+        <DesktopIcon label="Invite de cmd" icon="📟" onDoubleClick={() => openApp('cmd')} />
+        <DesktopIcon label="Lofi Radio" icon="🎵" onDoubleClick={() => openApp('mediaplayer')} />
+        <DesktopIcon label="Paint" icon="🎨" onDoubleClick={() => openApp('paint')} />
+        <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={() => openApp('pinball')} />
+        <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={() => openApp('file-explorer')} />
+        <DesktopIcon label="Minecraft" icon="⛏️" onDoubleClick={() => openApp('minecraft')} />
+        <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => openApp('recycle-bin')} />
       </div>
 
       {/* ─── Windows ─── */}
@@ -214,21 +164,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       {startOpen && (
         <StartMenu
           taskbarH={TASKBAR_H}
-          onOpenIE={() => openIE()}
-          onOpenVSCode={openVSCode}
-          onOpenMinesweeper={openMinesweeper}
-          onOpenSlitherio={openSlitherio}
-          onOpenNotepad={openNotepad}
-          onOpenCmd={openCmd}
-          onOpenMediaPlayer={openMediaPlayer}
-          onOpenPaint={openPaint}
-          onOpenPinball={openPinball}
-          onOpenFileExplorer={openFileExplorer}
-          onOpenTaskMgr={openTaskMgr}
-          onOpenOutlook={openOutlook}
-          onOpenControlPanel={openControlPanel}
-          onOpenGitTracker={openGitTracker}
-          onOpenCv={openCv}
+          openApp={openApp}
           onClose={() => setStartOpen(false)}
         />
       )}
@@ -238,6 +174,8 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         taskbarH={TASKBAR_H}
         startOpen={startOpen}
         onToggleStart={() => setStartOpen((p) => !p)}
+        onOpenVolumeMixer={openVolumeMixer}
+        onOpenDateTime={openDateTime}
         clock={clock}
       />
 
@@ -255,36 +193,40 @@ interface AppContentProps {
   onChangeBg: (bg: string) => void
 }
 
-function AppContent({ win, desktopBg, onChangeBg }: AppContentProps) {
+function AppContent({
+  win,
+  desktopBg,
+  onChangeBg,
+}: {
+  win: XPWindowState
+  desktopBg: string
+  onChangeBg: (v: string) => void
+}) {
   switch (win.appType) {
+    case 'minecraft':
+      return <iframe src="https://mcraft.fun/" title="Minecraft" style={{ width: '100%', height: '100%', border: 'none' }} />
     case 'file-explorer':
-      return <FileExplorer windowId={win.id} initialPath={(win.payload?.path as string) ?? ''} />
+      return <FileExplorer windowId={win.id} />
     case 'internet-explorer':
-      return <InternetExplorer windowId={win.id} initialUrl={(win.payload?.url as string) ?? undefined} />
-    case 'slitherio':
-      return <iframe src="https://slither.io" title="Slither.io" style={{ width: '100%', height: '100%', border: 'none' }} />
-    case 'cv':
-      return <iframe src="/CV_SERRET_Arthur.pdf" title="Curriculum Vitae" style={{ width: '100%', height: '100%', border: 'none' }} />
-    case 'paint':
-      return <iframe src="https://jspaint.app" title="Paint" style={{ width: '100%', height: '100%', border: 'none' }} />
-    case 'pinball':
-      return <iframe src="/pinball/index.html" title="Space Cadet Pinball" style={{ width: '100%', height: '100%', border: 'none' }} />
+      return <InternetExplorer windowId={win.id} initialUrl={win.payload?.url as string} />
+    case 'vscode':
+      return <VSCodeApp windowId={win.id} repo={win.payload?.repo as string} filePath={win.payload?.repoPath as string} />
     case 'minesweeper':
       return <MinesweeperApp windowId={win.id} />
+    case 'slitherio':
+      return <iframe src="https://slither.io" title="Slither.io" style={{ width: '100%', height: '100%', border: 'none' }} />
     case 'notepad':
       return <NotepadApp windowId={win.id} />
     case 'cmd':
       return <CmdApp windowId={win.id} />
     case 'mediaplayer':
       return <MediaPlayerApp windowId={win.id} />
-    case 'vscode':
-      return (
-        <VSCodeApp
-          windowId={win.id}
-          repo={(win.payload?.repo as string) ?? undefined}
-          filePath={(win.payload?.filePath as string) ?? undefined}
-        />
-      )
+    case 'paint':
+      return <iframe src="https://jspaint.app" title="Paint" style={{ width: '100%', height: '100%', border: 'none' }} />
+    case 'pinball':
+      return <AudioIframe windowId={win.id} appTitle="3D Pinball" appIcon="🪐" src="https://alula.github.io/SpaceCadetPinball/" title="3D Pinball for Windows - Space Cadet" />
+    case 'cv':
+      return <iframe src="/CV_SERRET_Arthur.pdf" title="Curriculum Vitae" style={{ width: '100%', height: '100%', border: 'none' }} />
     case 'taskmgr':
       return <TaskManagerApp windowId={win.id} />
     case 'outlook':
@@ -295,8 +237,12 @@ function AppContent({ win, desktopBg, onChangeBg }: AppContentProps) {
       return <GitTrackerApp windowId={win.id} />
     case 'recycle-bin':
       return <RecycleBinApp windowId={win.id} />
+    case 'volume-mixer':
+      return <VolumeMixerApp windowId={win.id} />
+    case 'datetime':
+      return <DateTimePropApp windowId={win.id} />
     default:
-      return <div style={{ padding: 12, color: '#666' }}>Application inconnue</div>
+      return <div style={{ padding: 20 }}>Application inconnue : {win.appType}</div>
   }
 }
 
@@ -337,19 +283,28 @@ function useVirtualCursorTracking(
   useEffect(() => {
     if (!active) return
 
-    const onMove = (e: MouseEvent) => {
+    const update = (clientX: number, clientY: number) => {
       const el = containerRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
-      const vx = ((e.clientX - rect.left) / rect.width) * width
-      const vy = ((e.clientY - rect.top) / rect.height) * height
+      const vx = ((clientX - rect.left) / rect.width) * width
+      const vy = ((clientY - rect.top) / rect.height) * height
       setCursorPos({
         x: Math.max(0, Math.min(width - 1, vx)),
         y: Math.max(0, Math.min(height - 1, vy)),
       })
     }
 
-    document.addEventListener('mousemove', onMove)
-    return () => document.removeEventListener('mousemove', onMove)
+    const onMouseMove = (e: MouseEvent) => update(e.clientX, e.clientY)
+    const onPointerMove = (e: PointerEvent) => update(e.clientX, e.clientY)
+
+    // Listen to both mousemove and pointermove so cursor tracks
+    // during setPointerCapture (drag/resize) operations
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('pointermove', onPointerMove)
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('pointermove', onPointerMove)
+    }
   }, [active, width, height, containerRef, setCursorPos])
 }

@@ -153,12 +153,13 @@ function ScreenOverlay({ isFocused }: { isFocused: boolean }) {
         width: SCREEN_W,
         height: SCREEN_H,
         pointerEvents: isFocused ? 'auto' : 'none',
-        cursor: isFocused ? 'none' : 'default',
+        cursor: 'none',
         overflow: 'hidden',
       }}
       distanceFactor={SCREEN_DISTANCE_FACTOR}
       zIndexRange={[1, 0]}
     >
+      {isFocused && <style>{`*, *::before, *::after { cursor: none !important; }`}</style>}
       <div
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
@@ -167,6 +168,7 @@ function ScreenOverlay({ isFocused }: { isFocused: boolean }) {
         onMouseUp={(e) => e.stopPropagation()}
         onDoubleClick={(e) => e.stopPropagation()}
         onContextMenu={(e) => { e.stopPropagation(); e.preventDefault() }}
+        style={{ cursor: 'none' }}
       >
         <WindowsXPDesktop width={SCREEN_W} height={SCREEN_H} active={isFocused} />
       </div>

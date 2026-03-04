@@ -1,7 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useWindowState } from './WindowManager'
+import { useEffect, useState } from 'react'
+import { useWM, useWindowState } from './WindowManager'
+import { MenuBar, MenuDef } from './MenuBar'
+import { XPAlert } from './XPAlert'
+import { XPTabButton } from './shared/XPTabButton'
+import { CanvasChart } from './shared/CanvasChart'
+import { xpButtonCompactStyle } from './shared/xpStyles'
 
 /* ═══════════════════════════════════════════════
  *  Task Manager (Gestionnaire des tâches)
@@ -31,78 +36,64 @@ const FAKE_PROCESSES = [
 
 export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
     const win = useWindowState(windowId)
+    const wm = useWM()
     const [activeTab, setActiveTab] = useState<TabType>('performances')
-    const canvasRef = useRef<HTMLCanvasElement>(null)
 
     // Fake dynamic metrics
     const [cpuUsage, setCpuUsage] = useState(15)
     const [memUsage, setMemUsage] = useState(1245) // MB
     const [netUsage, setNetUsage] = useState(0.5) // %
-    const historyRef = useRef<number[]>(Array(50).fill(15))
-    const netHistoryRef = useRef<number[]>(Array(50).fill(0.5))
-    const netCanvasRef = useRef<HTMLCanvasElement>(null)
+    const [cpuHistory, setCpuHistory] = useState<number[]>(() => Array(50).fill(15))
+    const [netHistory, setNetHistory] = useState<number[]>(() => Array(50).fill(0.5))
+    const [alert, setAlert] = useState<string | null>(null)
+
+    const menus: MenuDef[] = [
+        {
+            label: 'Fichier',
+            items: [
+                { label: 'Nouvelle tâche (Exécuter...)', disabled: true },
+                { divider: true },
+                { label: 'Quitter le Gestionnaire des tâches', onClick: () => wm.closeWindow(windowId) }
+            ]
+        },
+        {
+            label: 'Options',
+            items: [
+                { label: 'Toujours visible', disabled: true },
+                { label: 'Masquer l\'icône', disabled: true }
+            ]
+        },
+        {
+            label: 'Affichage',
+            items: [
+                { label: 'Actualiser maintenant', onClick: () => setAlert('Actualisé ! (Visuellement)') },
+                { label: 'Vitesse de mise à jour', disabled: true }
+            ]
+        },
+        {
+            label: '?',
+            items: [
+                { label: 'Aide sur le Gestionnaire des tâches', disabled: true },
+                { divider: true },
+                { label: 'À propos...', onClick: () => setAlert('Gestionnaire des tâches de Windows XP.\nFaux processus à des fins de démonstration.') }
+            ]
+        }
+    ]
 
     useEffect(() => {
         if (activeTab !== 'performances') return
 
         const intervalId = setInterval(() => {
-            // Simulate fluctuation between 5 and 30
             const newCpu = Math.max(0, Math.min(100, cpuUsage + (Math.random() * 10 - 5)))
             setCpuUsage(Math.round(newCpu))
 
             const newMem = memUsage + (Math.random() * 20 - 10)
             setMemUsage(Math.round(newMem))
 
-            // Update history
-            historyRef.current.push(newCpu)
-            if (historyRef.current.length > 50) {
-                historyRef.current.shift()
-            }
-
-            // Draw canvas
-            const canvas = canvasRef.current
-            if (canvas) {
-                const ctx = canvas.getContext('2d')
-                if (ctx) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-                    // Draw grid
-                    ctx.strokeStyle = '#008000'
-                    ctx.lineWidth = 1
-                    for (let i = 0; i < canvas.width; i += 20) {
-                        ctx.beginPath()
-                        ctx.moveTo(i, 0)
-                        ctx.lineTo(i, canvas.height)
-                        ctx.stroke()
-                    }
-                    for (let i = 0; i < canvas.height; i += 20) {
-                        ctx.beginPath()
-                        ctx.moveTo(0, i)
-                        ctx.lineTo(canvas.width, i)
-                        ctx.stroke()
-                    }
-
-                    // Draw line
-                    ctx.strokeStyle = '#00FF00'
-                    ctx.lineWidth = 2
-                    ctx.beginPath()
-                    const data = historyRef.current
-                    const stepX = canvas.width / (data.length - 1)
-                    data.forEach((val, i) => {
-                        const x = i * stepX
-                        const y = canvas.height - (val / 100) * canvas.height
-                        if (i === 0) ctx.moveTo(x, y)
-                        else ctx.lineTo(x, y)
-                    })
-                    ctx.stroke()
-
-                    // Fill under line
-                    ctx.lineTo(canvas.width, canvas.height)
-                    ctx.lineTo(0, canvas.height)
-                    ctx.fillStyle = 'rgba(0, 255, 0, 0.2)'
-                    ctx.fill()
-                }
-            }
+            setCpuHistory((prev) => {
+                const next = [...prev, newCpu]
+                return next.length > 50 ? next.slice(next.length - 50) : next
+            })
         }, 1000)
 
         return () => clearInterval(intervalId)
@@ -113,54 +104,13 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
         if (activeTab !== 'reseau') return
 
         const intervalId = setInterval(() => {
-            // Simulate network spikes between 0% and 5%
             const newNet = Math.max(0, Math.min(10, netUsage + (Math.random() * 2 - 1)))
             setNetUsage(Number(newNet.toFixed(2)))
 
-            netHistoryRef.current.push(newNet)
-            if (netHistoryRef.current.length > 50) {
-                netHistoryRef.current.shift()
-            }
-
-            const canvas = netCanvasRef.current
-            if (canvas) {
-                const ctx = canvas.getContext('2d')
-                if (ctx) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-                    // Grid
-                    ctx.strokeStyle = '#008000'
-                    ctx.lineWidth = 1
-                    for (let i = 0; i < canvas.width; i += 20) {
-                        ctx.beginPath()
-                        ctx.moveTo(i, 0)
-                        ctx.lineTo(i, canvas.height)
-                        ctx.stroke()
-                    }
-                    for (let i = 0; i < canvas.height; i += 20) {
-                        ctx.beginPath()
-                        ctx.moveTo(0, i)
-                        ctx.lineTo(canvas.width, i)
-                        ctx.stroke()
-                    }
-
-                    // Line Chart
-                    ctx.strokeStyle = '#FFFF00' // Yellow line for network
-                    ctx.lineWidth = 2
-                    ctx.beginPath()
-                    const data = netHistoryRef.current
-                    const stepX = canvas.width / (data.length - 1)
-                    data.forEach((val, i) => {
-                        const x = i * stepX
-                        // Normalize 0-10% to canvas height for visibility
-                        const normalizedY = (val / 10) * canvas.height
-                        const y = canvas.height - normalizedY
-                        if (i === 0) ctx.moveTo(x, y)
-                        else ctx.lineTo(x, y)
-                    })
-                    ctx.stroke()
-                }
-            }
+            setNetHistory((prev) => {
+                const next = [...prev, newNet]
+                return next.length > 50 ? next.slice(next.length - 50) : next
+            })
         }, 1000)
 
         return () => clearInterval(intervalId)
@@ -179,12 +129,14 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
             fontSize: 12
         }}>
             {/* Menu Bar */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #fff', backgroundColor: '#ECE9D8', padding: '2px 4px' }}>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Fichier</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Options</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>Affichage</div>
-                <div style={{ padding: '2px 6px', cursor: 'pointer' }}>?</div>
-            </div>
+            <MenuBar menus={menus} />
+            {alert && (
+                <XPAlert
+                    title="Gestionnaire des tâches"
+                    message={alert}
+                    onClose={() => setAlert(null)}
+                />
+            )}
             <div style={{ borderBottom: '1px solid #ACA899' }} />
 
             {/* Content Area */}
@@ -192,27 +144,27 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
 
                 {/* Tabs */}
                 <div style={{ display: 'flex', borderBottom: '1px solid #ACA899', position: 'relative', zIndex: 1 }}>
-                    <TabButton
+                    <XPTabButton
                         active={activeTab === 'applications'}
                         onClick={() => setActiveTab('applications')}
                         label="Applications"
                     />
-                    <TabButton
+                    <XPTabButton
                         active={activeTab === 'processus'}
                         onClick={() => setActiveTab('processus')}
                         label="Processus"
                     />
-                    <TabButton
+                    <XPTabButton
                         active={activeTab === 'performances'}
                         onClick={() => setActiveTab('performances')}
                         label="Performances"
                     />
-                    <TabButton
+                    <XPTabButton
                         active={activeTab === 'reseau'}
                         onClick={() => setActiveTab('reseau')}
                         label="Mise en réseau"
                     />
-                    <TabButton
+                    <XPTabButton
                         active={activeTab === 'utilisateurs'}
                         onClick={() => setActiveTab('utilisateurs')}
                         label="Utilisateurs"
@@ -254,9 +206,9 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
                                 </table>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8, gap: 8 }}>
-                                <button style={btnStyle}>Fin de tâche</button>
-                                <button style={btnStyle}>Basculer vers</button>
-                                <button style={btnStyle}>Nouvelle tâche...</button>
+                                <button style={xpButtonCompactStyle}>Fin de tâche</button>
+                                <button style={xpButtonCompactStyle}>Basculer vers</button>
+                                <button style={xpButtonCompactStyle}>Nouvelle tâche...</button>
                             </div>
                         </div>
                     )}
@@ -290,7 +242,7 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
                                     <input type="checkbox" id="showAll" />
                                     <label htmlFor="showAll" style={{ marginLeft: 4 }}>Afficher les processus de tous les utilisateurs</label>
                                 </div>
-                                <button style={btnStyle}>Terminer le processus</button>
+                                <button style={xpButtonCompactStyle}>Terminer le processus</button>
                             </div>
                         </div>
                     )}
@@ -311,12 +263,7 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
                                         Historique de l'utilisation de l'UC
                                     </div>
                                     <div style={{ flex: 1, border: '1px solid #ACA899', backgroundColor: '#000', position: 'relative' }}>
-                                        <canvas
-                                            ref={canvasRef}
-                                            width={200}
-                                            height={80}
-                                            style={{ width: '100%', height: '100%', display: 'block' }}
-                                        />
+                                        <CanvasChart data={cpuHistory} />
                                     </div>
                                 </div>
 
@@ -365,11 +312,13 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
                                 Connexion au réseau local
                             </div>
                             <div style={{ flex: 1, border: '1px solid #ACA899', backgroundColor: '#000', position: 'relative' }}>
-                                <canvas
-                                    ref={netCanvasRef}
+                                <CanvasChart
+                                    data={netHistory}
+                                    maxValue={10}
+                                    lineColor="#FFFF00"
+                                    fill={false}
                                     width={400}
                                     height={120}
-                                    style={{ width: '100%', height: '100%', display: 'block' }}
                                 />
                             </div>
 
@@ -419,9 +368,9 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
                                 </table>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8, gap: 8 }}>
-                                <button style={btnStyle} disabled>Se déconnecter</button>
-                                <button style={btnStyle} disabled>Ouvrir une session</button>
-                                <button style={btnStyle} disabled>Envoyer un message...</button>
+                                <button style={xpButtonCompactStyle} disabled>Se déconnecter</button>
+                                <button style={xpButtonCompactStyle} disabled>Ouvrir une session</button>
+                                <button style={xpButtonCompactStyle} disabled>Envoyer un message...</button>
                             </div>
                         </div>
                     )}
@@ -436,34 +385,4 @@ export function TaskManagerApp({ windowId }: TaskManagerAppProps) {
             </div>
         </div>
     )
-}
-
-function TabButton({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) {
-    return (
-        <div
-            onClick={onClick}
-            style={{
-                padding: '2px 8px',
-                border: '1px solid #ACA899',
-                borderBottom: active ? '1px solid #FFF' : '1px solid #ACA899',
-                backgroundColor: active ? '#FFF' : '#ECE9D8',
-                cursor: 'pointer',
-                borderTopLeftRadius: 3,
-                borderTopRightRadius: 3,
-                marginRight: 2,
-                transform: active ? 'translateY(1px)' : 'none',
-                zIndex: active ? 2 : 0,
-                position: 'relative'
-            }}
-        >
-            {label}
-        </div>
-    )
-}
-
-const btnStyle = {
-    padding: '2px 12px',
-    fontFamily: 'Tahoma, sans-serif',
-    fontSize: 11,
-    cursor: 'pointer'
 }

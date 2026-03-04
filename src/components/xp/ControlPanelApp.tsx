@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useWindowState } from './WindowManager'
+import { XPTabButton } from './shared/XPTabButton'
+import { xpButtonCompactStyle } from './shared/xpStyles'
 
 /* ═══════════════════════════════════════════════
  *  Control Panel App
@@ -39,19 +41,19 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
         }}>
             {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid #ACA899', margin: '8px 8px 0', position: 'relative', zIndex: 1 }}>
-                <TabButton
+                <XPTabButton
                     active={activeTab === 'themes'}
                     onClick={() => setActiveTab('themes')}
                     label="Thèmes"
                 />
-                <TabButton
+                <XPTabButton
                     active={activeTab === 'desktop'}
                     onClick={() => setActiveTab('desktop')}
                     label="Bureau"
                 />
-                <TabButton active={activeTab === 'screensaver'} onClick={() => setActiveTab('screensaver')} label="Écran de veille" />
-                <TabButton active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')} label="Apparence" />
-                <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} label="Paramètres" />
+                <XPTabButton active={activeTab === 'screensaver'} onClick={() => setActiveTab('screensaver')} label="Écran de veille" />
+                <XPTabButton active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')} label="Apparence" />
+                <XPTabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} label="Paramètres" />
             </div>
 
             {/* Content Area */}
@@ -114,7 +116,7 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
                                 ))}
                             </div>
                             <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                                <button style={btnStyle}>Parcourir...</button>
+                                <button style={xpButtonCompactStyle}>Parcourir...</button>
                             </div>
                         </div>
                     </fieldset>
@@ -149,8 +151,8 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
                                         <option>Logos Windows XP</option>
                                     </select>
                                     <div style={{ display: 'flex', gap: 8 }}>
-                                        <button style={btnStyle}>Paramètres</button>
-                                        <button style={btnStyle}>Aperçu</button>
+                                        <button style={xpButtonCompactStyle}>Paramètres</button>
+                                        <button style={xpButtonCompactStyle}>Aperçu</button>
                                     </div>
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -165,7 +167,7 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
                             <p style={{ margin: '0 0 8px 0', color: '#666' }}>
                                 Pour régler l'alimentation de votre moniteur ou économiser l'énergie, cliquez sur Alimentation.
                             </p>
-                            <button style={btnStyle}>Alimentation...</button>
+                            <button style={xpButtonCompactStyle}>Alimentation...</button>
                         </fieldset>
                     </div>
                 )}
@@ -198,8 +200,8 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
                                 </select>
                             </div>
                             <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                                <button style={btnStyle}>Effets...</button>
-                                <button style={btnStyle}>Avancé</button>
+                                <button style={xpButtonCompactStyle}>Effets...</button>
+                                <button style={xpButtonCompactStyle}>Avancé</button>
                             </div>
                         </div>
                     </fieldset>
@@ -227,8 +229,8 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
                             </div>
                         </div>
                         <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                            <button style={btnStyle}>Dépannage...</button>
-                            <button style={btnStyle}>Avancé</button>
+                            <button style={xpButtonCompactStyle}>Dépannage...</button>
+                            <button style={xpButtonCompactStyle}>Avancé</button>
                         </div>
                     </fieldset>
                 )}
@@ -236,34 +238,4 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
 
         </div>
     )
-}
-
-function TabButton({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) {
-    return (
-        <div
-            onClick={onClick}
-            style={{
-                padding: '2px 8px',
-                border: '1px solid #ACA899',
-                borderBottom: active ? '1px solid #FFF' : '1px solid #ACA899',
-                backgroundColor: active ? '#FFF' : '#ECE9D8',
-                cursor: 'pointer',
-                borderTopLeftRadius: 3,
-                borderTopRightRadius: 3,
-                marginRight: 2,
-                marginTop: active ? 0 : 2,
-                zIndex: active ? 2 : 0,
-                position: 'relative'
-            }}
-        >
-            {label}
-        </div>
-    )
-}
-
-const btnStyle = {
-    padding: '2px 12px',
-    fontFamily: 'Tahoma, sans-serif',
-    fontSize: 11,
-    cursor: 'pointer'
 }
