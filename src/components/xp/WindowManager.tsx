@@ -10,7 +10,7 @@ import { createContext, useContext, useCallback, useRef, useSyncExternalStore } 
  *  Drives the taskbar items.
  * ═══════════════════════════════════════════════ */
 
-export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode'
+export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball'
 
 export interface XPWindowState {
   id: string
@@ -26,6 +26,7 @@ export interface XPWindowState {
   minimized: boolean
   maximized: boolean
   zIndex: number
+  isFixedSize?: boolean
   /** App-specific payload (initial path, url, etc.) */
   payload?: Record<string, unknown>
 }
@@ -73,6 +74,7 @@ function createWindowManager(desktopW: number, desktopH: number) {
     icon?: string
     w?: number
     h?: number
+    isFixedSize?: boolean
     payload?: Record<string, unknown>
   }) {
     const id = nextId()
@@ -84,14 +86,40 @@ function createWindowManager(desktopW: number, desktopH: number) {
     const y = clamp(40 + cascade, 0, desktopH - 60)
     const zIndex = state.nextZ
 
-    const title = opts?.title ?? (appType === 'file-explorer' ? 'Poste de travail' : 'Internet Explorer')
-    const icon = opts?.icon ?? (appType === 'file-explorer' ? '📁' : '🌐')
+    const titles: Record<AppType, string> = {
+      'file-explorer': 'Poste de travail',
+      'internet-explorer': 'Internet Explorer',
+      'vscode': 'VS Code',
+      'minesweeper': 'Démineur',
+      'slitherio': 'Slither.io',
+      'notepad': 'Bloc-notes',
+      'cmd': 'Invite de commandes',
+      'mediaplayer': 'Lecteur Windows Media',
+      'paint': 'Paint',
+      'pinball': '3D Pinball - Space Cadet'
+    }
+    const icons: Record<AppType, string> = {
+      'file-explorer': '📁',
+      'internet-explorer': '🌐',
+      'vscode': '💻',
+      'minesweeper': '💣',
+      'slitherio': '🐍',
+      'notepad': '📝',
+      'cmd': '📟',
+      'mediaplayer': '🎵',
+      'paint': '🎨',
+      'pinball': '🪐'
+    }
+
+    const title = opts?.title ?? titles[appType]
+    const icon = opts?.icon ?? icons[appType]
 
     const win: XPWindowState = {
       id, appType, title, icon, x, y, w, h,
       minW: 250, minH: 180,
       minimized: false, maximized: false,
       zIndex,
+      isFixedSize: opts?.isFixedSize,
       payload: opts?.payload,
     }
 

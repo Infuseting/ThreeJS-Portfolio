@@ -6,6 +6,13 @@ interface StartMenuProps {
   taskbarH: number
   onOpenIE: () => void
   onOpenVSCode: () => void
+  onOpenMinesweeper: () => void
+  onOpenSlitherio: () => void
+  onOpenNotepad: () => void
+  onOpenCmd: () => void
+  onOpenMediaPlayer: () => void
+  onOpenPaint: () => void
+  onOpenPinball: () => void
   onOpenFileExplorer: () => void
   onClose: () => void
 }
@@ -15,6 +22,13 @@ export function StartMenu({
   taskbarH,
   onOpenIE,
   onOpenVSCode,
+  onOpenMinesweeper,
+  onOpenSlitherio,
+  onOpenNotepad,
+  onOpenCmd,
+  onOpenMediaPlayer,
+  onOpenPaint,
+  onOpenPinball,
   onOpenFileExplorer,
   onClose,
 }: StartMenuProps) {
@@ -46,6 +60,13 @@ export function StartMenu({
       <div style={{ padding: '6px 0' }}>
         <MenuItem icon="🌐" label="Internet Explorer" onClick={onOpenIE} />
         <MenuItem icon="💻" label="VS Code" onClick={onOpenVSCode} />
+        <MenuItem icon="💣" label="Démineur" onClick={onOpenMinesweeper} />
+        <MenuItem icon="🐍" label="Slither.io" onClick={onOpenSlitherio} />
+        <MenuItem icon="📝" label="Bloc-notes" onClick={onOpenNotepad} />
+        <MenuItem icon="📟" label="Invite de cmd" onClick={onOpenCmd} />
+        <MenuItem icon="🎵" label="Lofi Radio" onClick={onOpenMediaPlayer} />
+        <MenuItem icon="🎨" label="Paint" onClick={onOpenPaint} />
+        <MenuItem icon="🪐" label="Pinball" onClick={onOpenPinball} />
         <MenuItem icon="📁" label="Poste de travail" onClick={onOpenFileExplorer} />
         <div style={{ borderTop: '1px solid #ccc', margin: '4px 12px' }} />
         <MenuItem icon="📁" label="Mes documents" onClick={onOpenFileExplorer} />

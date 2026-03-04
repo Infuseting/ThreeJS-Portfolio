@@ -11,6 +11,10 @@ import { XPWindow } from './xp/XPWindow'
 import { FileExplorer } from './xp/FileExplorer'
 import { InternetExplorer } from './xp/InternetExplorer'
 import { VSCodeApp } from './xp/VSCodeApp'
+import { MinesweeperApp } from './xp/MinesweeperApp'
+import { NotepadApp } from './xp/NotepadApp'
+import { CmdApp } from './xp/CmdApp'
+import { MediaPlayerApp } from './xp/MediaPlayerApp'
 import { DesktopIcon } from './xp/DesktopIcon'
 import { StartMenu } from './xp/StartMenu'
 import { Taskbar } from './xp/Taskbar'
@@ -62,6 +66,41 @@ function DesktopInner({ width, height, active }: { width: number; height: number
     setStartOpen(false)
   }, [wm])
 
+  const openMinesweeper = useCallback(() => {
+    wm.openWindow('minesweeper', { title: 'Démineur', icon: '💣', w: 200, h: 300 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openSlitherio = useCallback(() => {
+    wm.openWindow('slitherio', { title: 'Slither.io', icon: '🐍', w: 1000, h: 700 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openNotepad = useCallback(() => {
+    wm.openWindow('notepad', { title: 'Bloc-notes', icon: '📝', w: 600, h: 400 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openCmd = useCallback(() => {
+    wm.openWindow('cmd', { title: 'Invite de commandes', icon: '📟', w: 600, h: 400 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openMediaPlayer = useCallback(() => {
+    wm.openWindow('mediaplayer', { title: 'Lecteur Windows Media', icon: '🎵', w: 320, h: 240 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openPaint = useCallback(() => {
+    wm.openWindow('paint', { title: 'Paint', icon: '🎨', w: 800, h: 600 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openPinball = useCallback(() => {
+    wm.openWindow('pinball', { title: '3D Pinball - Space Cadet', icon: '🪐', w: 600, h: 446, isFixedSize: true })
+    setStartOpen(false)
+  }, [wm])
+
   const openIE = useCallback((url?: string) => {
     wm.openWindow('internet-explorer', {
       title: 'Internet Explorer',
@@ -96,12 +135,19 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       }}
     >
       {/* ─── Desktop icons ─── */}
-      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10, position: 'absolute', top: 0, left: 0 }}>
+      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', flexWrap: 'wrap', alignContent: 'flex-start', gap: 10, position: 'absolute', top: 0, left: 0, bottom: TASKBAR_H }}>
         <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={openFileExplorer} />
         <DesktopIcon label="Internet Explorer" icon="🌐" onDoubleClick={() => openIE()} />
         <DesktopIcon label="VS Code" icon="📝" onDoubleClick={openVSCode} />
+        <DesktopIcon label="Démineur" icon="💣" onDoubleClick={openMinesweeper} />
+        <DesktopIcon label="Slither.io" icon="🐍" onDoubleClick={openSlitherio} />
+        <DesktopIcon label="Bloc-notes" icon="📝" onDoubleClick={openNotepad} />
+        <DesktopIcon label="Invite de cmd" icon="📟" onDoubleClick={openCmd} />
+        <DesktopIcon label="Lofi Radio" icon="🎵" onDoubleClick={openMediaPlayer} />
+        <DesktopIcon label="Paint" icon="🎨" onDoubleClick={openPaint} />
+        <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={openPinball} />
         <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={openFileExplorer} />
-        <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => {}} />
+        <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => { }} />
       </div>
 
       {/* ─── Windows ─── */}
@@ -124,6 +170,13 @@ function DesktopInner({ width, height, active }: { width: number; height: number
           taskbarH={TASKBAR_H}
           onOpenIE={() => openIE()}
           onOpenVSCode={openVSCode}
+          onOpenMinesweeper={openMinesweeper}
+          onOpenSlitherio={openSlitherio}
+          onOpenNotepad={openNotepad}
+          onOpenCmd={openCmd}
+          onOpenMediaPlayer={openMediaPlayer}
+          onOpenPaint={openPaint}
+          onOpenPinball={openPinball}
           onOpenFileExplorer={openFileExplorer}
           onClose={() => setStartOpen(false)}
         />
@@ -151,6 +204,20 @@ function AppContent({ win }: { win: XPWindowState }) {
       return <FileExplorer windowId={win.id} initialPath={(win.payload?.path as string) ?? ''} />
     case 'internet-explorer':
       return <InternetExplorer windowId={win.id} initialUrl={(win.payload?.url as string) ?? undefined} />
+    case 'slitherio':
+      return <iframe src="https://slither.io" title="Slither.io" style={{ width: '100%', height: '100%', border: 'none' }} />
+    case 'paint':
+      return <iframe src="https://jspaint.app" title="Paint" style={{ width: '100%', height: '100%', border: 'none' }} />
+    case 'pinball':
+      return <iframe src="/pinball/index.html" title="Space Cadet Pinball" style={{ width: '100%', height: '100%', border: 'none' }} />
+    case 'minesweeper':
+      return <MinesweeperApp windowId={win.id} />
+    case 'notepad':
+      return <NotepadApp windowId={win.id} />
+    case 'cmd':
+      return <CmdApp windowId={win.id} />
+    case 'mediaplayer':
+      return <MediaPlayerApp windowId={win.id} />
     case 'vscode':
       return (
         <VSCodeApp

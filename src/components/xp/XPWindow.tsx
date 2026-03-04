@@ -84,7 +84,7 @@ export function XPWindow({
   /* ── Drag start (called from onPointerDown on title bar) ── */
   const onTitlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault()
-    if (maximized) return
+    if (maximized && !win.isFixedSize) return
     wm.focusWindow(id)
 
     // Capture all pointer events on this element until release
@@ -203,7 +203,7 @@ export function XPWindow({
       {/* ── Title bar ── */}
       <div
         onPointerDown={onTitlePointerDown}
-        onDoubleClick={() => wm.toggleMaximize(id)}
+        onDoubleClick={() => !win.isFixedSize && wm.toggleMaximize(id)}
         style={{
           background: 'linear-gradient(180deg, #0A246A 0%, #3A6EA5 8%, #3A6EA5 92%, #0A246A 100%)',
           height: 30,
@@ -239,11 +239,13 @@ export function XPWindow({
           onClick={() => wm.minimizeWindow(id)}
         />
         {/* Max / Restore */}
-        <TitleBtn
-          label={maximized ? '🗗' : '🗖'}
-          bg="linear-gradient(180deg, #3C8FD8, #2070B0)"
-          onClick={() => wm.toggleMaximize(id)}
-        />
+        {!win.isFixedSize && (
+          <TitleBtn
+            label={maximized ? '🗗' : '🗖'}
+            bg="linear-gradient(180deg, #3C8FD8, #2070B0)"
+            onClick={() => wm.toggleMaximize(id)}
+          />
+        )}
         {/* Close */}
         <TitleBtn
           label="✕"
@@ -257,8 +259,8 @@ export function XPWindow({
         {children}
       </div>
 
-      {/* ── Resize handles (hidden when maximized) ── */}
-      {!maximized && (
+      {/* ── Resize handles (hidden when maximized or fixed size) ── */}
+      {!maximized && !win.isFixedSize && (
         <>
           {/* Edges */}
           <div onPointerDown={onResizePointerDown('n')} style={handleStyle('ns-resize', { top: 0, left: HANDLE, right: HANDLE, height: HANDLE })} />
