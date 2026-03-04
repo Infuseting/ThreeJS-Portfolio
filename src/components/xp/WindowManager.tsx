@@ -10,7 +10,7 @@ import { createContext, useContext, useCallback, useRef, useSyncExternalStore } 
  *  Drives the taskbar items.
  * ═══════════════════════════════════════════════ */
 
-export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv'
+export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv' | 'taskmgr' | 'outlook' | 'control-panel' | 'git-tracker' | 'recycle-bin'
 
 export interface XPWindowState {
   id: string
@@ -97,7 +97,12 @@ function createWindowManager(desktopW: number, desktopH: number) {
       'mediaplayer': 'Lecteur Windows Media',
       'paint': 'Paint',
       'pinball': '3D Pinball - Space Cadet',
-      'cv': 'Curriculum Vitae'
+      'cv': 'Curriculum Vitae',
+      'taskmgr': 'Gestionnaire des tâches de Windows',
+      'outlook': 'Outlook Express',
+      'control-panel': 'Panneau de configuration',
+      'git-tracker': 'Git Tracker',
+      'recycle-bin': 'Corbeille',
     }
     const icons: Record<AppType, string> = {
       'file-explorer': '📁',
@@ -110,7 +115,12 @@ function createWindowManager(desktopW: number, desktopH: number) {
       'mediaplayer': '🎵',
       'paint': '🎨',
       'pinball': '🪐',
-      'cv': '📄'
+      'cv': '📄',
+      'taskmgr': '📊',
+      'outlook': '📧',
+      'control-panel': '⚙️',
+      'git-tracker': '🐙',
+      'recycle-bin': '🗑️',
     }
 
     const title = opts?.title ?? titles[appType]

@@ -15,6 +15,10 @@ interface StartMenuProps {
   onOpenPinball: () => void
   onOpenFileExplorer: () => void
   onOpenCv: () => void
+  onOpenTaskMgr: () => void
+  onOpenOutlook: () => void
+  onOpenControlPanel: () => void
+  onOpenGitTracker: () => void
   onClose: () => void
 }
 
@@ -32,6 +36,10 @@ export function StartMenu({
   onOpenPinball,
   onOpenFileExplorer,
   onOpenCv,
+  onOpenTaskMgr,
+  onOpenOutlook,
+  onOpenControlPanel,
+  onOpenGitTracker,
   onClose,
 }: StartMenuProps) {
   return (
@@ -65,14 +73,19 @@ export function StartMenu({
         <MenuItem icon="💣" label="Démineur" onClick={onOpenMinesweeper} />
         <MenuItem icon="🐍" label="Slither.io" onClick={onOpenSlitherio} />
         <MenuItem icon="📝" label="Bloc-notes" onClick={onOpenNotepad} />
-        <MenuItem icon="📟" label="Invite de cmd" onClick={onOpenCmd} />
+        <MenuItem icon="📟" label="Invite de commandes" onClick={onOpenCmd} />
+        <MenuItem icon="📊" label="Gestionnaire des tâches" onClick={onOpenTaskMgr} />
+        <MenuItem icon="📧" label="Outlook Express" onClick={onOpenOutlook} />
+        <MenuItem icon="🐙" label="Git Tracker" onClick={onOpenGitTracker} />
         <MenuItem icon="🎵" label="Lofi Radio" onClick={onOpenMediaPlayer} />
         <MenuItem icon="🎨" label="Paint" onClick={onOpenPaint} />
         <MenuItem icon="🪐" label="Pinball" onClick={onOpenPinball} />
-        <MenuItem icon="📁" label="Poste de travail" onClick={onOpenFileExplorer} />
         <MenuItem icon="📄" label="Mon CV" onClick={onOpenCv} />
-        <div style={{ borderTop: '1px solid #ccc', margin: '4px 12px' }} />
-        <MenuItem icon="📁" label="Mes documents" onClick={onOpenFileExplorer} />
+        <div style={{ padding: '0 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <MenuItem icon="📁" label="Mes documents" onClick={onOpenFileExplorer} />
+          <MenuItem icon="⚙️" label="Panneau de configuration" onClick={onOpenControlPanel} />
+        </div>
+        <div style={{ height: 1, backgroundColor: '#ACA899', margin: '8px 0' }} />
       </div>
 
       {/* Footer */}

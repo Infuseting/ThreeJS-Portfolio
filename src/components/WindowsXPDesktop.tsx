@@ -19,6 +19,11 @@ import { DesktopIcon } from './xp/DesktopIcon'
 import { StartMenu } from './xp/StartMenu'
 import { Taskbar } from './xp/Taskbar'
 import { XPCursor } from './xp/XPCursor'
+import { TaskManagerApp } from './xp/TaskManagerApp'
+import { OutlookExpressApp } from './xp/OutlookExpressApp'
+import { ControlPanelApp } from './xp/ControlPanelApp'
+import { GitTrackerApp } from './xp/GitTrackerApp'
+import { RecycleBinApp } from './xp/RecycleBinApp'
 
 /* ═══════════════════════════════════════════════
  *  WindowsXP Desktop
@@ -54,6 +59,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
   const [cursorPos, setCursorPos] = useState({ x: width / 2, y: height / 2 })
   const [startOpen, setStartOpen] = useState(false)
   const [clock, setClock] = useState('')
+  const [desktopBg, setDesktopBg] = useState('linear-gradient(180deg, #245EDC 0%, #3A8FE8 30%, #5DBF4C 55%, #4CA33B 100%)')
   const containerRef = useRef<HTMLDivElement>(null)
 
   useClock(setClock)
@@ -122,6 +128,31 @@ function DesktopInner({ width, height, active }: { width: number; height: number
     setStartOpen(false)
   }, [wm])
 
+  const openTaskMgr = useCallback(() => {
+    wm.openWindow('taskmgr', { title: 'Gestionnaire des tâches de Windows', icon: '📊', w: 450, h: 450, isFixedSize: true })
+    setStartOpen(false)
+  }, [wm])
+
+  const openOutlook = useCallback(() => {
+    wm.openWindow('outlook', { title: 'Outlook Express', icon: '📧', w: 800, h: 600 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openControlPanel = useCallback(() => {
+    wm.openWindow('control-panel', { title: 'Panneau de configuration', icon: '⚙️', w: 500, h: 400 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openGitTracker = useCallback(() => {
+    wm.openWindow('git-tracker', { title: 'Git Tracker', icon: '🐙', w: 700, h: 500 })
+    setStartOpen(false)
+  }, [wm])
+
+  const openRecycleBin = useCallback(() => {
+    wm.openWindow('recycle-bin', { title: 'Corbeille', icon: '🗑️', w: 600, h: 450 })
+    setStartOpen(false)
+  }, [wm])
+
   return (
     <div
       ref={containerRef}
@@ -133,7 +164,9 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         overflow: 'hidden',
         cursor: active ? 'none' : 'default',
         userSelect: 'none',
-        background: 'linear-gradient(180deg, #245EDC 0%, #3A8FE8 30%, #5DBF4C 55%, #4CA33B 100%)',
+        background: desktopBg,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         fontFamily: '"Tahoma", "Segoe UI", sans-serif',
         fontSize: 14,
         color: '#000',
@@ -143,8 +176,11 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', flexWrap: 'wrap', alignContent: 'flex-start', gap: 10, position: 'absolute', top: 0, left: 0, bottom: TASKBAR_H }}>
         <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={openFileExplorer} />
         <DesktopIcon label="Internet Explorer" icon="🌐" onDoubleClick={() => openIE()} />
+        <DesktopIcon label="Outlook Express" icon="📧" onDoubleClick={openOutlook} />
         <DesktopIcon label="Mon CV" icon="📄" onDoubleClick={openCv} />
-        <DesktopIcon label="VS Code" icon="📝" onDoubleClick={openVSCode} />
+        <DesktopIcon label="VS Code" icon="💻" onDoubleClick={openVSCode} />
+        <DesktopIcon label="Git Tracker" icon="🐙" onDoubleClick={openGitTracker} />
+        <DesktopIcon label="Gestionnaire des tâches" icon="📊" onDoubleClick={openTaskMgr} />
         <DesktopIcon label="Démineur" icon="💣" onDoubleClick={openMinesweeper} />
         <DesktopIcon label="Slither.io" icon="🐍" onDoubleClick={openSlitherio} />
         <DesktopIcon label="Bloc-notes" icon="📝" onDoubleClick={openNotepad} />
@@ -153,7 +189,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         <DesktopIcon label="Paint" icon="🎨" onDoubleClick={openPaint} />
         <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={openPinball} />
         <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={openFileExplorer} />
-        <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => { }} />
+        <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={openRecycleBin} />
       </div>
 
       {/* ─── Windows ─── */}
@@ -166,7 +202,11 @@ function DesktopInner({ width, height, active }: { width: number; height: number
           taskbarH={TASKBAR_H}
           containerRef={containerRef}
         >
-          <AppContent win={win} />
+          <AppContent
+            win={win}
+            desktopBg={desktopBg}
+            onChangeBg={setDesktopBg}
+          />
         </XPWindow>
       ))}
 
@@ -184,6 +224,10 @@ function DesktopInner({ width, height, active }: { width: number; height: number
           onOpenPaint={openPaint}
           onOpenPinball={openPinball}
           onOpenFileExplorer={openFileExplorer}
+          onOpenTaskMgr={openTaskMgr}
+          onOpenOutlook={openOutlook}
+          onOpenControlPanel={openControlPanel}
+          onOpenGitTracker={openGitTracker}
           onOpenCv={openCv}
           onClose={() => setStartOpen(false)}
         />
@@ -205,7 +249,13 @@ function DesktopInner({ width, height, active }: { width: number; height: number
 
 /* ── App content router ── */
 
-function AppContent({ win }: { win: XPWindowState }) {
+interface AppContentProps {
+  win: XPWindowState
+  desktopBg: string
+  onChangeBg: (bg: string) => void
+}
+
+function AppContent({ win, desktopBg, onChangeBg }: AppContentProps) {
   switch (win.appType) {
     case 'file-explorer':
       return <FileExplorer windowId={win.id} initialPath={(win.payload?.path as string) ?? ''} />
@@ -235,6 +285,16 @@ function AppContent({ win }: { win: XPWindowState }) {
           filePath={(win.payload?.filePath as string) ?? undefined}
         />
       )
+    case 'taskmgr':
+      return <TaskManagerApp windowId={win.id} />
+    case 'outlook':
+      return <OutlookExpressApp windowId={win.id} />
+    case 'control-panel':
+      return <ControlPanelApp windowId={win.id} currentBg={desktopBg} onChangeBg={onChangeBg} />
+    case 'git-tracker':
+      return <GitTrackerApp windowId={win.id} />
+    case 'recycle-bin':
+      return <RecycleBinApp windowId={win.id} />
     default:
       return <div style={{ padding: 12, color: '#666' }}>Application inconnue</div>
   }
