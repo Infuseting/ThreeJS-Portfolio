@@ -91,10 +91,13 @@ export function useInteractable({
   useFrame((state) => {
     const { interact } = get() as { interact: boolean }
     if (interact && !prevInteract.current) {
-      const objPos = new THREE.Vector3(...position)
-      const dist = state.camera.position.distanceTo(objPos)
-      if (dist < maxDistance && target?.id === id) {
-        onInteract()
+      if (groupRef.current) {
+        const objPos = new THREE.Vector3()
+        groupRef.current.getWorldPosition(objPos)
+        const dist = state.camera.position.distanceTo(objPos)
+        if (dist < maxDistance && target?.id === id) {
+          onInteract()
+        }
       }
     }
     prevInteract.current = interact

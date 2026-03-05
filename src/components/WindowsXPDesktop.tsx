@@ -30,6 +30,7 @@ import { VolumeMixerApp } from './xp/VolumeMixerApp'
 import { VolumeProvider } from './xp/VolumeContext'
 import { AudioIframe } from './xp/AudioIframe'
 import { useOpenApp } from '@/hooks/useOpenApp'
+import { useComputerPower, useComputerPowerActions } from '@/components/ComputerPowerStore'
 import type { AppType } from './xp/WindowManager'
 
 /* ═══════════════════════════════════════════════
@@ -49,6 +50,54 @@ export function WindowsXPDesktop({
   height = 600,
   active = false,
 }: WindowsXPDesktopProps) {
+  const { status } = useComputerPower()
+
+  if (status === 'OFF') {
+    return (
+      <div style={{ width, height, backgroundColor: '#000' }} />
+    )
+  }
+
+  if (status === 'BOOTING') {
+    return (
+      <div style={{
+        width, height, backgroundColor: '#000', display: 'flex',
+        flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff'
+      }}>
+        {/* Simple XP boot screen mockup */}
+        <div style={{ fontSize: 40, fontWeight: 'bold', fontStyle: 'italic', marginBottom: 20 }}>
+          <span style={{ color: '#E53935' }}>Microsoft</span> Windows <span style={{ color: '#FB8C00' }}>XP</span>
+        </div>
+        <div style={{
+          width: 150, height: 10, border: '2px solid #555', borderRadius: 4, overflow: 'hidden'
+        }}>
+          <div style={{
+            width: '30%', height: '100%', background: 'linear-gradient(90deg, #1E88E5, #64B5F6, #1E88E5)',
+            animation: 'boot-load 1.5s infinite linear'
+          }} />
+        </div>
+        <style>{`
+          @keyframes boot-load {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(330%); }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  if (status === 'SHUTTING_DOWN') {
+    return (
+      <div style={{
+        width, height, backgroundColor: '#1A4D9B', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', color: '#fff',
+        fontFamily: '"Tahoma", "Segoe UI", sans-serif', fontSize: 24
+      }}>
+        Fermeture de Windows en cours...
+      </div>
+    )
+  }
+
   return (
     <WMProvider desktopW={width} desktopH={height}>
       <VolumeProvider>
@@ -77,6 +126,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
 
   const closeStart = useCallback(() => setStartOpen(false), [])
   const openApp = useOpenApp(closeStart)
+  const { turnOff } = useComputerPowerActions()
 
   /* ── Specialized openers for apps needing custom overrides ── */
   const openIE = useCallback((url?: string) => {
@@ -167,6 +217,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
           taskbarH={TASKBAR_H}
           openApp={openApp}
           onClose={() => setStartOpen(false)}
+          onShutdown={turnOff}
         />
       )}
 

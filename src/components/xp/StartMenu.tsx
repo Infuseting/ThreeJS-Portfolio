@@ -38,10 +38,11 @@ export interface StartMenuProps {
   taskbarH: number
   openApp: (appType: AppType) => void
   onClose: () => void
+  onShutdown: () => void
 }
 
 /** The Windows XP Start menu popup. */
-export function StartMenu({ taskbarH, openApp, onClose }: StartMenuProps) {
+export function StartMenu({ taskbarH, openApp, onClose, onShutdown }: StartMenuProps) {
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -85,7 +86,10 @@ export function StartMenu({ taskbarH, openApp, onClose }: StartMenuProps) {
         display: 'flex', justifyContent: 'flex-end', background: '#D6DFF7',
       }}>
         <button
-          onClick={onClose}
+          onClick={() => {
+            onClose()
+            onShutdown()
+          }}
           style={{
             background: 'linear-gradient(180deg, #FE8A3A, #E34F0C)',
             color: '#fff', border: '1px solid #933509', borderRadius: 3,

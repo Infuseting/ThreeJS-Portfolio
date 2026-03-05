@@ -35,6 +35,7 @@ export default function Home() {
           <main className="w-full h-screen bg-black overflow-hidden relative" style={{ isolation: 'isolate' }}>
             <Scene />
 
+
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2 }}>
               <InstructionPanel />
               <Crosshair />

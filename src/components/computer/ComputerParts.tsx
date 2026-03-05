@@ -2,6 +2,8 @@
 
 import * as THREE from 'three'
 import { type ReactNode } from 'react'
+import { useInteractable } from '@/hooks/useInteractable'
+import { useComputerPower, useComputerPowerActions } from '@/components/ComputerPowerStore'
 
 /* ── Shared highlight props used by all computer sub-components ── */
 export interface HighlightProps {
@@ -61,17 +63,57 @@ interface Tower3DProps {
 }
 
 export function Tower3D({ position, highlight }: Tower3DProps) {
+  const { status } = useComputerPower()
+  const { turnOn, turnOff } = useComputerPowerActions()
+
+  const handleTogglePower = () => {
+    if (status === 'OFF') turnOn()
+    else if (status === 'ON') turnOff()
+  }
+
+  // Offset power button slightly on the Z and Y axis from the tower center
+  const buttonPos: [number, number, number] = [
+    position[0] + 0.1,
+    position[1] + 0.1,
+    position[2] + 0.226,
+  ]
+
+  const { interactiveRef, isHighlighted } = useInteractable({
+    position: buttonPos,
+    interactionId: 'pc-power-button',
+    interactionLabel: status === 'OFF' ? 'Allumer le PC' : 'Éteindre le PC',
+    onInteract: handleTogglePower,
+  })
+
+  // Dynamic emissive properties based on power state
+  const buttonEmissive = status === 'ON' || status === 'BOOTING' ? '#00ff00' : '#ff0000'
+  const buttonEmissiveIntensity = status === 'OFF' ? 0.3 : 0.8
+  const highlightIntensity = isHighlighted ? 0.3 : 0
+
+  // Increase hitbox size for the power button so the raycaster hits it easily
   return (
     <group>
       <mesh castShadow receiveShadow position={position}>
         <boxGeometry args={[0.2, 0.5, 0.45]} />
         <meshStandardMaterial color="#d0d0d0" {...highlight} />
       </mesh>
-      {/* Power LED */}
-      <mesh position={[position[0] + 0.1, position[1] + 0.1, position[2] + 0.226]}>
-        <circleGeometry args={[0.015, 16]} />
-        <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={0.8} />
-      </mesh>
+
+      {/* Power LED / Button */}
+      {/* We add an invisible larger hitbox for easier raycasting */}
+      <group position={buttonPos} ref={interactiveRef as any}>
+        <mesh>
+          <circleGeometry args={[0.015, 16]} />
+          <meshStandardMaterial 
+            color={buttonEmissive} 
+            emissive={buttonEmissive} 
+            emissiveIntensity={buttonEmissiveIntensity + highlightIntensity} 
+          />
+        </mesh>
+        <mesh visible={false}>
+          <boxGeometry args={[0.1, 0.1, 0.05]} />
+          <meshBasicMaterial color="red" wireframe />
+        </mesh>
+      </group>
     </group>
   )
 }
