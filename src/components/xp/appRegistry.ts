@@ -26,6 +26,7 @@ export const APP_REGISTRY: Record<AppType, AppConfig> = {
   'internet-explorer': { appType: 'internet-explorer', title: 'Internet Explorer', icon: '🌐', w: 900, h: 650 },
   'vscode': { appType: 'vscode', title: 'VS Code', icon: '💻', w: 950, h: 700 },
   'minesweeper': { appType: 'minesweeper', title: 'Démineur', icon: '💣', w: 200, h: 300 },
+  'tetris': { appType: 'tetris', title: 'Tetris', icon: '🧱', w: 320, h: 480, isFixedSize: true },
   'slitherio': { appType: 'slitherio', title: 'Slither.io', icon: '🐍', w: 1000, h: 700 },
   'notepad': { appType: 'notepad', title: 'Bloc-notes', icon: '📝', w: 600, h: 400 },
   'cmd': { appType: 'cmd', title: 'Invite de commandes', icon: '📟', w: 600, h: 400 },

@@ -12,6 +12,7 @@ import { FileExplorer } from './xp/FileExplorer'
 import { InternetExplorer } from './xp/InternetExplorer'
 import { VSCodeApp } from './xp/VSCodeApp'
 import { MinesweeperApp } from './xp/MinesweeperApp'
+import { TetrisApp } from './xp/TetrisApp'
 import { NotepadApp } from './xp/NotepadApp'
 import { CmdApp } from './xp/CmdApp'
 import { MediaPlayerApp } from './xp/MediaPlayerApp'
@@ -131,6 +132,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         <DesktopIcon label="Git Tracker" icon="🐙" onDoubleClick={() => openApp('git-tracker')} />
         <DesktopIcon label="Gestionnaire des tâches" icon="📊" onDoubleClick={() => openApp('taskmgr')} />
         <DesktopIcon label="Démineur" icon="💣" onDoubleClick={() => openApp('minesweeper')} />
+        <DesktopIcon label="Tetris" icon="🧱" onDoubleClick={() => openApp('tetris')} />
         <DesktopIcon label="Slither.io" icon="🐍" onDoubleClick={() => openApp('slitherio')} />
         <DesktopIcon label="Bloc-notes" icon="📝" onDoubleClick={() => openApp('notepad')} />
         <DesktopIcon label="Invite de cmd" icon="📟" onDoubleClick={() => openApp('cmd')} />
@@ -210,6 +212,8 @@ function AppContent({
       return <VSCodeApp windowId={win.id} repo={win.payload?.repo as string} filePath={win.payload?.repoPath as string} />
     case 'minesweeper':
       return <MinesweeperApp windowId={win.id} />
+    case 'tetris':
+      return <TetrisApp windowId={win.id} />
     case 'slitherio':
       return <iframe src="https://slither.io" title="Slither.io" style={{ width: '100%', height: '100%', border: 'none' }} />
     case 'notepad':

@@ -11,7 +11,7 @@ import { APP_REGISTRY } from './appRegistry'
  *  Drives the taskbar items.
  * ═══════════════════════════════════════════════ */
 
-export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv' | 'taskmgr' | 'outlook' | 'control-panel' | 'git-tracker' | 'recycle-bin' | 'volume-mixer' | 'datetime'
+export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv' | 'taskmgr' | 'outlook' | 'control-panel' | 'git-tracker' | 'recycle-bin' | 'volume-mixer' | 'datetime' | 'tetris'
 
 export interface XPWindowState {
   id: string

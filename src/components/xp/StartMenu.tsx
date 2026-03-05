@@ -15,6 +15,7 @@ const MENU_ITEMS: StartMenuEntry[] = [
   { icon: '🌐', label: 'Internet Explorer', appType: 'internet-explorer' },
   { icon: '💻', label: 'VS Code', appType: 'vscode' },
   { icon: '💣', label: 'Démineur', appType: 'minesweeper' },
+  { icon: '🧱', label: 'Tetris', appType: 'tetris' },
   { icon: '🐍', label: 'Slither.io', appType: 'slitherio' },
   { icon: '📝', label: 'Bloc-notes', appType: 'notepad' },
   { icon: '📟', label: 'Invite de commandes', appType: 'cmd' },
