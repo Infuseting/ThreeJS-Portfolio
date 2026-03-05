@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useWindowState, useWM } from './WindowManager'
 import { XPTabButton } from './shared/XPTabButton'
 
@@ -12,6 +12,30 @@ export function DateTimePropApp({ windowId }: { windowId: string }) {
     const [activeTab, setActiveTab] = useState<'date' | 'fuseau' | 'internet'>('date')
     const [timezone, setTimezone] = useState('(GMT+01:00) Bruxelles, Copenhague, Madrid, Paris')
     const [autoSync, setAutoSync] = useState(true)
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    // Close window when clicking outside
+    useEffect(() => {
+        const handleDown = (e: MouseEvent | TouchEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+
+                // Allow clicking the taskbar clock without immediately reopening/closing
+                // We'll rely on a small timeout to let the toggler run first if needed.
+                wm.closeWindow(windowId)
+            }
+        }
+
+        const timer = setTimeout(() => {
+            document.addEventListener('mousedown', handleDown)
+            document.addEventListener('touchstart', handleDown)
+        }, 10)
+
+        return () => {
+            clearTimeout(timer)
+            document.removeEventListener('mousedown', handleDown)
+            document.removeEventListener('touchstart', handleDown)
+        }
+    }, [windowId, wm])
 
     // Update the clock every second for the analog clock preview
     useEffect(() => {
@@ -89,7 +113,7 @@ export function DateTimePropApp({ windowId }: { windowId: string }) {
     }
 
     return (
-        <div style={{
+        <div ref={containerRef} style={{
             width: '100%',
             height: '100%',
             backgroundColor: '#ECE9D8',

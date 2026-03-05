@@ -21,6 +21,7 @@ interface UseWindowResizeOpts {
   move: (id: string, x: number, y: number) => void
   resize: (id: string, w: number, h: number) => void
   screenToVirtual: (dxScreen: number, dyScreen: number) => { dx: number; dy: number }
+  setOverrideCursor: (cursor: 'default' | 'nwse' | 'nesw' | 'ns' | 'ew') => void
 }
 
 export function useWindowResize(opts: UseWindowResizeOpts) {
@@ -42,6 +43,12 @@ export function useWindowResize(opts: UseWindowResizeOpts) {
 
       const target = e.currentTarget as HTMLElement
       target.setPointerCapture(e.pointerId)
+
+      const cursorMap: Record<string, 'nwse' | 'nesw' | 'ew' | 'ns'> = {
+        n: 'ns', s: 'ns', e: 'ew', w: 'ew',
+        nw: 'nwse', se: 'nwse', ne: 'nesw', sw: 'nesw'
+      }
+      opts.setOverrideCursor(cursorMap[edge] || 'default')
 
       dragRef.current = {
         edge,
@@ -75,6 +82,7 @@ export function useWindowResize(opts: UseWindowResizeOpts) {
       }
       const cleanup = () => {
         dragRef.current = null
+        opts.setOverrideCursor('default')
         target.removeEventListener('pointermove', onMove)
         target.removeEventListener('pointerup', cleanup)
         target.removeEventListener('pointercancel', cleanup)

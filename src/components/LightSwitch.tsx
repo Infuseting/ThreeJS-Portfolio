@@ -1,8 +1,9 @@
 'use client'
 
-import { type ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { useLightChannel, useToggleLight } from '@/components/LightNetwork'
 import { useInteractable } from '@/hooks/useInteractable'
+import { unlockAchievement } from '@/components/AchievementStore'
 
 interface LightSwitchProps {
   /** One or more channel ids this switch controls */
@@ -41,8 +42,24 @@ export function LightSwitch({
 
   const label = interactionLabel ?? (isOn ? 'Éteindre la lumière' : 'Allumer la lumière')
 
+  const streakRef = useRef(0)
+  const lastToggleTimeRef = useRef(0)
+
   const toggleAll = () => {
     togglers.forEach((t) => t(!isOn))
+
+    // Achievement logic: 10 toggles in a row with < 1s between each
+    const now = performance.now()
+    if (now - lastToggleTimeRef.current < 1000) {
+      streakRef.current += 1
+    } else {
+      streakRef.current = 1 // Reset streak if too slow
+    }
+    lastToggleTimeRef.current = now
+
+    if (streakRef.current >= 10) {
+      unlockAchievement('jour-nuit')
+    }
   }
 
   const { interactiveRef, isHighlighted } = useInteractable({
@@ -75,8 +92,8 @@ export function LightSwitch({
               <boxGeometry args={[0.04, 0.08, 0.03]} />
               <meshStandardMaterial
                 color={isOn ? '#4ade80' : '#888'}
-                emissive={isHighlighted ? '#ffffff' : '#000000'}
-                emissiveIntensity={isHighlighted ? 0.25 : 0}
+                emissive={isOn ? '#4ade80' : '#aaaaaa'}
+                emissiveIntensity={isHighlighted ? 0.6 : 0.25}
               />
             </mesh>
           </group>

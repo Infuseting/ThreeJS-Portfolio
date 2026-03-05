@@ -5,8 +5,8 @@ import { useSyncExternalStore } from 'react'
 /* ═══════════════════════════════════════════════
  *  Achievement Store
  *
- *  Global singleton managing unlocked achievements
- *  and toast notifications.
+ *  Global singleton managing unlocked achievements,
+ *  "new" status, persistence, and toast notifications.
  * ═══════════════════════════════════════════════ */
 
 export type AchievementRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'
@@ -48,6 +48,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rarity: 'LEGENDARY',
     image: '/achievements/tetris-master.png',
   },
+  {
+    id: 'jour-nuit',
+    title: 'Jour. Nuit. Jour. Nuit...',
+    description: 'Vous avez cliqué 10 fois d\'affilée sur un interrupteur. Vous avez un tic nerveux ou quoi ?',
+    rarity: 'RARE',
+    image: '/achievements/jour-nuit.png',
+  },
 ]
 
 /* ── Rarity colors ── */
@@ -72,14 +79,49 @@ export const RARITY_GLOW: Record<AchievementRarity, string> = {
 
 interface AchievementState {
   unlocked: Set<string>
+  /** Achievements unlocked but not yet viewed in the app */
+  unseen: Set<string>
   toast: AchievementDef | null
 }
 
 type Listener = () => void
 
+const STORAGE_KEY = 'threejs_portfolio_achievements'
+
+function loadPersistedState(): { unlocked: Set<string>, unseen: Set<string> } {
+  try {
+    if (typeof window === 'undefined') return { unlocked: new Set(), unseen: new Set() }
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) return { unlocked: new Set(), unseen: new Set() }
+    const parsed = JSON.parse(stored)
+    return {
+      unlocked: new Set(parsed.unlocked || []),
+      unseen: new Set(parsed.unseen || [])
+    }
+  } catch (e) {
+    console.warn('Failed to load achievements from localStorage', e)
+    return { unlocked: new Set(), unseen: new Set() }
+  }
+}
+
+function savePersistedState(unlocked: Set<string>, unseen: Set<string>) {
+  try {
+    if (typeof window === 'undefined') return
+    const data = {
+      unlocked: Array.from(unlocked),
+      unseen: Array.from(unseen)
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  } catch (e) {
+    console.warn('Failed to save achievements to localStorage', e)
+  }
+}
+
 function createAchievementStore() {
+  const initial = loadPersistedState()
   let state: AchievementState = {
-    unlocked: new Set<string>(),
+    unlocked: initial.unlocked,
+    unseen: initial.unseen,
     toast: null,
   }
   const listeners = new Set<Listener>()
@@ -97,10 +139,15 @@ function createAchievementStore() {
       const newUnlocked = new Set(state.unlocked)
       newUnlocked.add(id)
 
+      const newUnseen = new Set(state.unseen)
+      newUnseen.add(id)
+
+      savePersistedState(newUnlocked, newUnseen)
+
       // Clear previous toast timeout
       if (toastTimeout) clearTimeout(toastTimeout)
 
-      state = { unlocked: newUnlocked, toast: def }
+      state = { unlocked: newUnlocked, unseen: newUnseen, toast: def }
       notify()
 
       // Auto-dismiss toast after 4s
@@ -116,6 +163,12 @@ function createAchievementStore() {
         toastTimeout = null
       }
       state = { ...state, toast: null }
+      notify()
+    },
+    markViewed: () => {
+      if (state.unseen.size === 0) return
+      state = { ...state, unseen: new Set() }
+      savePersistedState(state.unlocked, state.unseen)
       notify()
     },
     subscribe: (listener: Listener) => {
@@ -141,4 +194,7 @@ export function unlockAchievement(id: string) {
 
 export function dismissAchievementToast() {
   achievementStore.dismissToast()
+}
+export function markAchievementsViewed() {
+  achievementStore.markViewed()
 }

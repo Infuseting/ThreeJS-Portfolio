@@ -1,8 +1,8 @@
 'use client'
 
-import { useWMState } from './WindowManager'
+import { useWM, useWMState } from './WindowManager'
 import { useVolume, useVolumeState } from './VolumeContext'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 /* ═══════════════════════════════════════════════
  *  Volume Mixer App (Windows XP style)
@@ -13,9 +13,33 @@ import { useState, useEffect } from 'react'
  * ═══════════════════════════════════════════════ */
 
 export function VolumeMixerApp({ windowId }: { windowId: string }) {
+    const wm = useWM()
     const wmState = useWMState()
     const vol = useVolume()
     const volState = useVolumeState()
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    // Close window when clicking outside
+    useEffect(() => {
+        const handleDown = (e: MouseEvent | TouchEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+
+                const target = e.target as HTMLElement
+                wm.closeWindow(windowId)
+            }
+        }
+        // Small delay so the click that opened this doesn't immediately close it
+        const timer = setTimeout(() => {
+            document.addEventListener('mousedown', handleDown)
+            document.addEventListener('touchstart', handleDown)
+        }, 10)
+
+        return () => {
+            clearTimeout(timer)
+            document.removeEventListener('mousedown', handleDown)
+            document.removeEventListener('touchstart', handleDown)
+        }
+    }, [windowId, wm])
 
     // Register open windows and unregister closed ones from the volume store
     useEffect(() => {
@@ -39,7 +63,7 @@ export function VolumeMixerApp({ windowId }: { windowId: string }) {
     const appEntries = Object.values(volState.apps).filter(a => a.windowId !== windowId)
 
     return (
-        <div style={{
+        <div ref={containerRef} style={{
             height: '100%',
             backgroundColor: '#ECE9D8',
             fontFamily: 'Tahoma, sans-serif',

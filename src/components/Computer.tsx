@@ -1,10 +1,11 @@
 'use client'
 
 import * as THREE from 'three'
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { useComputerFocus, useComputerFocusActions } from '@/components/ComputerFocusStore'
+import { useComputerPower } from '@/components/ComputerPowerStore'
 import { useInteractable } from '@/hooks/useInteractable'
 import { unlockAchievement } from '@/components/AchievementStore'
 import { WindowsXPDesktop } from '@/components/WindowsXPDesktop'
@@ -56,6 +57,10 @@ export function Computer({
 }: ComputerProps) {
   const screenGroupRef = useRef<THREE.Group>(null)
   const screenMeshRef = useRef<THREE.Mesh>(null)
+
+  /* ── Power state (for screen glow) ── */
+  const { status: powerStatus } = useComputerPower()
+  const screenOn = powerStatus === 'ON' || powerStatus === 'BOOTING' || powerStatus === 'SHUTTING_DOWN'
 
   /* ── Focus state ── */
   const focusState = useComputerFocus()
@@ -134,6 +139,7 @@ export function Computer({
           highlight={highlight}
         >
           <ScreenOverlay isFocused={isFocused} />
+          <ScreenGlow on={screenOn} />
         </Monitor3D>
 
         <Keyboard3D position={[0, DESK_H + 0.035, 0.08]} size={[0.4, 0.015, 0.15]} highlight={highlight} />
@@ -175,5 +181,34 @@ function ScreenOverlay({ isFocused }: { isFocused: boolean }) {
         <WindowsXPDesktop width={SCREEN_W} height={SCREEN_H} active={isFocused} />
       </div>
     </Html>
+  )
+}
+/* ── Screen glow component (proper SpotLight with target) ── */
+
+function ScreenGlow({ on }: { on: boolean }) {
+  const lightRef = useRef<THREE.SpotLight>(null)
+  const targetRef = useRef<THREE.Object3D>(null)
+
+  useEffect(() => {
+    if (lightRef.current && targetRef.current) {
+      lightRef.current.target = targetRef.current
+    }
+  }, [])
+
+  return (
+    <>
+      <spotLight
+        ref={lightRef}
+        position={[0, 0, 0.15]}
+        intensity={on ? 1.5 : 0}
+        angle={Math.PI / 3}
+        penumbra={0.8}
+        distance={10}
+        color="#aaccff"
+        castShadow
+      />
+      {/* Target placed in front of the screen (+Z = forward from monitor) */}
+      <object3D ref={targetRef} position={[0, 0, 0.2]} />
+    </>
   )
 }

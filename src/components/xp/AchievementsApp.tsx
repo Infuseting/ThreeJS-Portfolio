@@ -5,9 +5,12 @@ import {
   RARITY_COLORS,
   RARITY_GLOW,
   useAchievements,
+  markAchievementsViewed,
   type AchievementDef,
   type AchievementRarity,
 } from '@/components/AchievementStore'
+
+import { useEffect, useMemo } from 'react'
 
 /* ═══════════════════════════════════════════════
  *  Achievements App (Windows XP style)
@@ -26,7 +29,27 @@ const RARITY_LABELS: Record<AchievementRarity, string> = {
 }
 
 export function AchievementsApp({ windowId }: AchievementsAppProps) {
-  const { unlocked } = useAchievements()
+  const { unlocked, unseen } = useAchievements()
+
+  // Mark all new achievements as viewed when the user closes/leaves this app
+  useEffect(() => {
+    return () => {
+      markAchievementsViewed()
+    }
+  }, [])
+
+  // Sort achievements: Unlocked first, then by original order
+  const sortedAchievements = useMemo(() => {
+    const sorted = [...ACHIEVEMENTS]
+    sorted.sort((a, b) => {
+      const aUnlocked = unlocked.has(a.id)
+      const bUnlocked = unlocked.has(b.id)
+      if (aUnlocked && !bUnlocked) return -1
+      if (!aUnlocked && bUnlocked) return 1
+      return 0 // Keep original order for same unlocked status
+    })
+    return sorted
+  }, [unlocked])
 
   return (
     <div style={{
@@ -85,11 +108,12 @@ export function AchievementsApp({ windowId }: AchievementsAppProps) {
         gap: 14,
         alignContent: 'start',
       }}>
-        {ACHIEVEMENTS.map((ach) => (
+        {sortedAchievements.map((ach) => (
           <AchievementCard
             key={ach.id}
             achievement={ach}
             isUnlocked={unlocked.has(ach.id)}
+            isNew={unseen.has(ach.id)}
           />
         ))}
       </div>
@@ -102,9 +126,11 @@ export function AchievementsApp({ windowId }: AchievementsAppProps) {
 function AchievementCard({
   achievement,
   isUnlocked,
+  isNew,
 }: {
   achievement: AchievementDef
   isUnlocked: boolean
+  isNew: boolean
 }) {
   const borderColor = RARITY_COLORS[achievement.rarity]
   const glowColor = RARITY_GLOW[achievement.rarity]
@@ -123,8 +149,36 @@ function AchievementCard({
         boxShadow: isUnlocked ? `0 0 12px ${glowColor}` : 'none',
         opacity: isUnlocked ? 1 : 0.6,
         transition: 'all 0.3s ease',
+        position: 'relative',
       }}
     >
+      {/* New Badge */}
+      {isNew && (
+        <div style={{
+          position: 'absolute',
+          top: -8,
+          right: -8,
+          backgroundColor: '#e94560',
+          color: '#fff',
+          padding: '2px 8px',
+          borderRadius: 12,
+          fontSize: 10,
+          fontWeight: 'bold',
+          boxShadow: '0 2px 4px rgba(233, 69, 96, 0.4)',
+          border: '1px solid #ff6b81',
+          zIndex: 2,
+          animation: 'pulse 2s infinite',
+        }}>
+          NOUVEAU
+          <style>{`
+            @keyframes pulse {
+              0% { transform: scale(1); }
+              50% { transform: scale(1.1); }
+              100% { transform: scale(1); }
+            }
+          `}</style>
+        </div>
+      )}
       {/* Icon */}
       <div style={{
         width: 56,

@@ -104,7 +104,7 @@ function XPWindowChrome({ id, win, x, y, w, h, maximized, screenToVirtual, wm, c
     winX: win.x, winY: win.y, winW: win.w, winH: win.h,
     minW: win.minW, minH: win.minH,
     focus: wm.focusWindow, move: wm.moveWindow, resize: wm.resizeWindow,
-    screenToVirtual,
+    screenToVirtual, setOverrideCursor: wm.setOverrideCursor,
   })
 
   const HANDLE = 6
@@ -136,7 +136,12 @@ function XPWindowChrome({ id, win, x, y, w, h, maximized, screenToVirtual, wm, c
         {children}
       </div>
       {!maximized && !win.isFixedSize && (
-        <ResizeHandles handle={HANDLE} handleStyle={handleStyle} onResizePointerDown={onResizePointerDown} />
+        <ResizeHandles
+          handle={HANDLE}
+          handleStyle={handleStyle}
+          onResizePointerDown={onResizePointerDown}
+          setOverrideCursor={wm.setOverrideCursor}
+        />
       )}
     </div>
   )
@@ -209,21 +214,33 @@ function TitleBtn({ label, bg, onClick }: { label: string; bg: string; onClick: 
 
 /* ── Resize handles ── */
 
-function ResizeHandles({ handle, handleStyle, onResizePointerDown }: {
+function ResizeHandles({
+  handle,
+  handleStyle,
+  onResizePointerDown,
+  setOverrideCursor,
+}: {
   handle: number
   handleStyle: (cursor: string, pos: CSSProperties) => CSSProperties
   onResizePointerDown: (edge: string) => (e: React.PointerEvent) => void
+  setOverrideCursor: (cursor: 'default' | 'nwse' | 'nesw' | 'ns' | 'ew') => void
 }) {
+  const mkProps = (edge: string, cursor: 'nwse' | 'nesw' | 'ns' | 'ew') => ({
+    onPointerDown: onResizePointerDown(edge),
+    onMouseEnter: () => setOverrideCursor(cursor),
+    onMouseLeave: () => setOverrideCursor('default'),
+  })
+
   return (
     <>
-      <div onPointerDown={onResizePointerDown('n')} style={handleStyle('ns-resize', { top: 0, left: handle, right: handle, height: handle })} />
-      <div onPointerDown={onResizePointerDown('s')} style={handleStyle('ns-resize', { bottom: 0, left: handle, right: handle, height: handle })} />
-      <div onPointerDown={onResizePointerDown('w')} style={handleStyle('ew-resize', { left: 0, top: handle, bottom: handle, width: handle })} />
-      <div onPointerDown={onResizePointerDown('e')} style={handleStyle('ew-resize', { right: 0, top: handle, bottom: handle, width: handle })} />
-      <div onPointerDown={onResizePointerDown('nw')} style={handleStyle('nwse-resize', { top: 0, left: 0, width: handle, height: handle })} />
-      <div onPointerDown={onResizePointerDown('ne')} style={handleStyle('nesw-resize', { top: 0, right: 0, width: handle, height: handle })} />
-      <div onPointerDown={onResizePointerDown('sw')} style={handleStyle('nesw-resize', { bottom: 0, left: 0, width: handle, height: handle })} />
-      <div onPointerDown={onResizePointerDown('se')} style={handleStyle('nwse-resize', { bottom: 0, right: 0, width: handle, height: handle })} />
+      <div {...mkProps('n', 'ns')} style={handleStyle('ns-resize', { top: 0, left: handle, right: handle, height: handle })} />
+      <div {...mkProps('s', 'ns')} style={handleStyle('ns-resize', { bottom: 0, left: handle, right: handle, height: handle })} />
+      <div {...mkProps('w', 'ew')} style={handleStyle('ew-resize', { left: 0, top: handle, bottom: handle, width: handle })} />
+      <div {...mkProps('e', 'ew')} style={handleStyle('ew-resize', { right: 0, top: handle, bottom: handle, width: handle })} />
+      <div {...mkProps('nw', 'nwse')} style={handleStyle('nwse-resize', { top: 0, left: 0, width: handle, height: handle })} />
+      <div {...mkProps('ne', 'nesw')} style={handleStyle('nesw-resize', { top: 0, right: 0, width: handle, height: handle })} />
+      <div {...mkProps('sw', 'nesw')} style={handleStyle('nesw-resize', { bottom: 0, left: 0, width: handle, height: handle })} />
+      <div {...mkProps('se', 'nwse')} style={handleStyle('nwse-resize', { bottom: 0, right: 0, width: handle, height: handle })} />
     </>
   )
 }

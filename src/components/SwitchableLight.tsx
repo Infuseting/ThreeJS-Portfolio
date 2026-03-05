@@ -101,9 +101,9 @@ export function SwitchableLight({
         <mesh position={position}>
           <sphereGeometry args={[0.15, 16, 16]} />
           <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={isOn ? 1 : 0.05}
+            color={isOn ? color : '#333333'}
+            emissive={isOn ? color : '#000000'}
+            emissiveIntensity={isOn ? 1 : 0}
           />
         </mesh>
       )}

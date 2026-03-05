@@ -26,6 +26,8 @@ interface UseInteractableOptions {
   holdThreshold?: number
   /** Custom max distance (defaults to INTERACT_DISTANCE). */
   maxDistance?: number
+  /** If true, disables interaction entirely (no HUD label, no input handling). */
+  disabled?: boolean
 }
 
 interface UseInteractableReturn {
@@ -57,6 +59,7 @@ export function useInteractable({
   onHoldComplete,
   holdThreshold,
   maxDistance = INTERACT_DISTANCE,
+  disabled = false,
 }: UseInteractableOptions): UseInteractableReturn {
   /* ── Stable id ── */
   const idRef = useRef(interactionId ?? `interactable-${Math.random().toString(36).slice(2, 9)}`)
@@ -69,12 +72,14 @@ export function useInteractable({
   /* ── Group ref ── */
   const groupRef = useRef<THREE.Group | null>(null)
 
-  const userData = {
-    interactive: true,
-    interactionId: id,
-    interactionLabel,
-    interactionKey,
-  }
+  const userData = disabled
+    ? { interactive: false }
+    : {
+      interactive: true,
+      interactionId: id,
+      interactionLabel,
+      interactionKey,
+    }
 
   const interactiveRef = useCallback(
     (node: THREE.Group | null) => {
@@ -82,7 +87,7 @@ export function useInteractable({
       if (node) node.userData = { ...userData }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [id, interactionLabel, interactionKey],
+    [id, interactionLabel, interactionKey, disabled],
   )
 
   // Keep userData in sync on re-renders where the node hasn't changed

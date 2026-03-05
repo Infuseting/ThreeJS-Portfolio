@@ -37,12 +37,14 @@ interface WMState {
   nextZ: number
   /** id of the window that has focus (topmost non-minimized) */
   focusedId: string | null
+  /** Optional global cursor override, e.g. for resizing */
+  overrideCursor?: 'default' | 'nwse' | 'nesw' | 'ns' | 'ew'
 }
 
 type Listener = () => void
 
 function createWindowManager(desktopW: number, desktopH: number) {
-  let state: WMState = { windows: [], nextZ: 1, focusedId: null }
+  let state: WMState = { windows: [], nextZ: 1, focusedId: null, overrideCursor: 'default' }
   const listeners = new Set<Listener>()
 
   function emit() {
@@ -86,8 +88,11 @@ function createWindowManager(desktopW: number, desktopH: number) {
     const h = opts?.h ?? config?.h ?? 500
     // Cascade offset based on number of existing windows
     const cascade = (state.windows.length % 8) * 30
-    const x = opts?.x ?? clamp(40 + cascade, 0, desktopW - w)
-    const y = opts?.y ?? clamp(40 + cascade, 0, desktopH - 60)
+
+    const rawX = opts?.x ?? (40 + cascade)
+    const rawY = opts?.y ?? (40 + cascade)
+    const x = clamp(rawX, -w + 60, desktopW - 60)
+    const y = clamp(rawY, 0, desktopH - 70)
     const zIndex = state.nextZ
 
     const title = opts?.title ?? config?.title ?? appType
@@ -173,9 +178,21 @@ function createWindowManager(desktopW: number, desktopH: number) {
   function moveWindow(id: string, x: number, y: number) {
     state = {
       ...state,
-      windows: state.windows.map((w) =>
-        w.id === id ? { ...w, x, y, maximized: false } : w
-      ),
+      windows: state.windows.map((w) => {
+        if (w.id !== id) return w
+
+        // Clamp to prevent the title bar from going completely off-screen
+        // Allow the window to be dragged partially off-screen horizontally,
+        // but keep at least 60px visible.
+        const clampX = clamp(x, -w.w + 60, desktopW - 60)
+
+        // Prevent the top from going above the screen (y=0)
+        // Prevent the title bar from going below the taskbar (desktopH - taskbarH - titlebarH)
+        // Taskbar is 40px tall, title bar is ~30px. So max Y is desktopH - 70.
+        const clampY = clamp(y, 0, desktopH - 70)
+
+        return { ...w, x: clampX, y: clampY, maximized: false }
+      }),
     }
     emit()
   }
@@ -205,6 +222,12 @@ function createWindowManager(desktopW: number, desktopH: number) {
     emit()
   }
 
+  function setOverrideCursor(cursor: 'default' | 'nwse' | 'nesw' | 'ns' | 'ew') {
+    if (state.overrideCursor === cursor) return
+    state = { ...state, overrideCursor: cursor }
+    emit()
+  }
+
   const wm = {
     subscribe,
     getSnapshot,
@@ -216,6 +239,7 @@ function createWindowManager(desktopW: number, desktopH: number) {
     moveWindow,
     resizeWindow,
     updateTitle,
+    setOverrideCursor,
   }
 
   // Open Notepad by default

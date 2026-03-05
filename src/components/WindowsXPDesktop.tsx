@@ -115,6 +115,7 @@ const TASKBAR_H = 40
 function DesktopInner({ width, height, active }: { width: number; height: number; active: boolean }) {
   const wm = useWM()
   const wmState = useWMState()
+  const overrideCursor = wmState.overrideCursor || 'default'
   const [cursorPos, setCursorPos] = useState({ x: width / 2, y: height / 2 })
   const [startOpen, setStartOpen] = useState(false)
   const [clock, setClock] = useState('')
@@ -135,6 +136,13 @@ function DesktopInner({ width, height, active }: { width: number; height: number
   }, [openApp])
 
   const openVolumeMixer = useCallback(() => {
+    const existing = wmState.windows.find(w => w.appType === 'volume-mixer')
+    if (existing) {
+      if (wmState.focusedId === existing.id) wm.closeWindow(existing.id)
+      else wm.focusWindow(existing.id)
+      return
+    }
+
     const mixerW = 400
     const mixerH = 300
     openApp('volume-mixer', {
@@ -142,9 +150,16 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       x: width - mixerW - 4,
       y: height - mixerH - TASKBAR_H - 4,
     })
-  }, [openApp, width, height])
+  }, [openApp, width, height, wmState.windows, wmState.focusedId, wm])
 
   const openDateTime = useCallback(() => {
+    const existing = wmState.windows.find(w => w.appType === 'datetime')
+    if (existing) {
+      if (wmState.focusedId === existing.id) wm.closeWindow(existing.id)
+      else wm.focusWindow(existing.id)
+      return
+    }
+
     const dtW = 420
     const dtH = 450
     openApp('datetime', {
@@ -152,7 +167,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       x: width - dtW - 4,
       y: height - dtH - TASKBAR_H - 4,
     })
-  }, [openApp, width, height])
+  }, [openApp, width, height, wmState.windows, wmState.focusedId, wm])
 
   return (
     <div
@@ -234,7 +249,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
       />
 
       {/* ─── Custom cursor ─── */}
-      <XPCursor x={cursorPos.x} y={cursorPos.y} />
+      <XPCursor x={cursorPos.x} y={cursorPos.y} type={overrideCursor} />
     </div>
   )
 }
