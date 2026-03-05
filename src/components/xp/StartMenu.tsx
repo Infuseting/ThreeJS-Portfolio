@@ -26,6 +26,7 @@ const MENU_ITEMS: StartMenuEntry[] = [
   { icon: '🎨', label: 'Paint', appType: 'paint' },
   { icon: '🪐', label: 'Pinball', appType: 'pinball' },
   { icon: '📄', label: 'Mon CV', appType: 'cv' },
+  { icon: '🏆', label: 'Succès', appType: 'achievements' },
 ]
 
 /** Bottom "Places" section of the Start menu. */

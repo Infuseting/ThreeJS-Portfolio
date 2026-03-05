@@ -31,6 +31,7 @@ import { VolumeProvider } from './xp/VolumeContext'
 import { AudioIframe } from './xp/AudioIframe'
 import { useOpenApp } from '@/hooks/useOpenApp'
 import { useComputerPower, useComputerPowerActions } from '@/components/ComputerPowerStore'
+import { AchievementsApp } from './xp/AchievementsApp'
 import type { AppType } from './xp/WindowManager'
 
 /* ═══════════════════════════════════════════════
@@ -191,6 +192,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={() => openApp('pinball')} />
         <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={() => openApp('file-explorer')} />
         <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => openApp('recycle-bin')} />
+        <DesktopIcon label="Succès" icon="🏆" onDoubleClick={() => openApp('achievements')} />
       </div>
 
       {/* ─── Windows ─── */}
@@ -293,6 +295,8 @@ function AppContent({
       return <VolumeMixerApp windowId={win.id} />
     case 'datetime':
       return <DateTimePropApp windowId={win.id} />
+    case 'achievements':
+      return <AchievementsApp windowId={win.id} />
     default:
       return <div style={{ padding: 20 }}>Application inconnue : {win.appType}</div>
   }

@@ -18,8 +18,12 @@ interface UseInteractableOptions {
   interactionLabel: string
   /** Key hint shown on the HUD (default "E"). */
   interactionKey?: string
-  /** Called on rising-edge of E press when within range & targeted. */
-  onInteract: () => void
+  /** Called when the E key is released (falling-edge) if the player was targeted and hadn't completed a hold. */
+  onInteract?: () => void
+  /** Called when the key is held continuously for holdThreshold seconds. */
+  onHoldComplete?: () => void
+  /** How long (in seconds) the key must be held to trigger onHoldComplete. */
+  holdThreshold?: number
   /** Custom max distance (defaults to INTERACT_DISTANCE). */
   maxDistance?: number
 }
@@ -50,6 +54,8 @@ export function useInteractable({
   interactionLabel,
   interactionKey = 'E',
   onInteract,
+  onHoldComplete,
+  holdThreshold,
   maxDistance = INTERACT_DISTANCE,
 }: UseInteractableOptions): UseInteractableReturn {
   /* ── Stable id ── */
@@ -84,22 +90,55 @@ export function useInteractable({
     groupRef.current.userData = { ...userData }
   }
 
-  /* ── Rising-edge E key detection ── */
+  /* ── Rising-edge E key & Hold detection ── */
   const [, get] = useKeyboardControls()
   const prevInteract = useRef(false)
+  const holdTimer = useRef(0)
+  const isHolding = useRef(false)
+  const holdCompleted = useRef(false)
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const { interact } = get() as { interact: boolean }
-    if (interact && !prevInteract.current) {
-      if (groupRef.current) {
-        const objPos = new THREE.Vector3()
-        groupRef.current.getWorldPosition(objPos)
-        const dist = state.camera.position.distanceTo(objPos)
-        if (dist < maxDistance && target?.id === id) {
-          onInteract()
+
+    const isTargetedAndInRange = () => {
+      if (!groupRef.current) return false
+      const objPos = new THREE.Vector3()
+      groupRef.current.getWorldPosition(objPos)
+      const dist = state.camera.position.distanceTo(objPos)
+      return dist < maxDistance && target?.id === id
+    }
+
+    if (interact) {
+      if (!prevInteract.current) {
+        if (isTargetedAndInRange()) {
+          // Started holding
+          holdTimer.current = 0
+          isHolding.current = true
+        }
+      } else if (isHolding.current) {
+        if (isTargetedAndInRange()) {
+          holdTimer.current += delta
+          if (onHoldComplete && holdThreshold && holdTimer.current >= holdThreshold && !holdCompleted.current) {
+            onHoldComplete()
+            holdCompleted.current = true
+          }
+        } else {
+          // Interrupted by looking away
+          isHolding.current = false
+          holdTimer.current = 0
         }
       }
+    } else {
+      // Key released
+      if (prevInteract.current && isHolding.current && !holdCompleted.current) {
+        // We were holding it, but released it before the holdThreshold was met -> normal click
+        onInteract?.()
+      }
+      isHolding.current = false
+      holdTimer.current = 0
+      holdCompleted.current = false
     }
+
     prevInteract.current = interact
   })
 

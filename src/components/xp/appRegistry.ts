@@ -41,4 +41,5 @@ export const APP_REGISTRY: Record<AppType, AppConfig> = {
   'recycle-bin': { appType: 'recycle-bin', title: 'Corbeille', icon: '🗑️', w: 600, h: 450 },
   'volume-mixer': { appType: 'volume-mixer', title: 'Contrôle du volume', icon: '🔊', w: 400, h: 300, isFixedSize: true },
   'datetime': { appType: 'datetime', title: 'Propriétés de Date et heure', icon: '🕒', w: 420, h: 450, isFixedSize: true },
+  'achievements': { appType: 'achievements', title: 'Succès', icon: '🏆', w: 500, h: 400 },
 }

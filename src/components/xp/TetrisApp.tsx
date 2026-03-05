@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTetris, COLS, ROWS } from '../../hooks/useTetris'
 import { useWM } from './WindowManager'
 import { MenuBar } from './MenuBar'
+import { unlockAchievement } from '@/components/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  Tetris App (Windows XP style)
@@ -46,6 +47,13 @@ export function TetrisApp({ windowId }: TetrisAppProps) {
 
   const wm = useWM()
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Achievement: Tetris Master
+  useEffect(() => {
+    if (score >= 10000) {
+      unlockAchievement('tetris-master')
+    }
+  }, [score])
 
   // Keyboard controls
   useEffect(() => {

@@ -6,6 +6,7 @@ import { ComputerFocusProvider } from '@/components/ComputerFocusStore'
 import { InteractionHUD } from '@/components/InteractionHUD'
 import { InstructionPanel } from '@/components/InstructionPanel'
 import { Crosshair } from '@/components/Crosshair'
+import { AchievementToast } from '@/components/xp/AchievementToast'
 import { KeyboardControls, KeyboardControlsEntry } from '@react-three/drei'
 import { useMemo } from 'react'
 
@@ -40,6 +41,7 @@ export default function Home() {
               <InstructionPanel />
               <Crosshair />
               <InteractionHUD />
+              <AchievementToast />
             </div>
           </main>
         </ComputerFocusProvider>

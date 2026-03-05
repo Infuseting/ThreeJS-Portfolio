@@ -19,6 +19,7 @@ interface PowerStore {
   get: () => PowerState
   turnOn: () => void
   turnOff: () => void
+  forceOff: () => void
   subscribe: (listener: () => void) => () => void
 }
 
@@ -54,6 +55,13 @@ function createPowerStore(initialStatus: PowerStatus = 'ON'): PowerStore {
         timeoutId = null
       }, 2500) // 2.5s shutdown time
     },
+    forceOff: () => {
+      setStatus('OFF')
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+    },
     subscribe: (listener) => {
       listeners.add(listener)
       return () => listeners.delete(listener)
@@ -73,5 +81,6 @@ export function useComputerPowerActions() {
   return {
     turnOn: powerStore.turnOn,
     turnOff: powerStore.turnOff,
+    forceOff: powerStore.forceOff,
   }
 }

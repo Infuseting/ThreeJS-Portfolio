@@ -6,6 +6,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { useComputerFocus, useComputerFocusActions } from '@/components/ComputerFocusStore'
 import { useInteractable } from '@/hooks/useInteractable'
+import { unlockAchievement } from '@/components/AchievementStore'
 import { WindowsXPDesktop } from '@/components/WindowsXPDesktop'
 import {
   Desk3D,
@@ -93,6 +94,7 @@ export function Computer({
     const { camPos, camTarget } = getCameraFocusPoints()
     enter(camPos, camTarget)
     document.exitPointerLock?.()
+    unlockAchievement('first-boot')
   }, [isFocused, getCameraFocusPoints, enter])
 
   const { interactiveRef, isHighlighted } = useInteractable({

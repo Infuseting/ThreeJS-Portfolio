@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { type ReactNode } from 'react'
 import { useInteractable } from '@/hooks/useInteractable'
 import { useComputerPower, useComputerPowerActions } from '@/components/ComputerPowerStore'
+import { unlockAchievement } from '@/components/AchievementStore'
 
 /* ── Shared highlight props used by all computer sub-components ── */
 export interface HighlightProps {
@@ -64,11 +65,18 @@ interface Tower3DProps {
 
 export function Tower3D({ position, highlight }: Tower3DProps) {
   const { status } = useComputerPower()
-  const { turnOn, turnOff } = useComputerPowerActions()
+  const { turnOn, turnOff, forceOff } = useComputerPowerActions()
 
   const handleTogglePower = () => {
     if (status === 'OFF') turnOn()
     else if (status === 'ON') turnOff()
+  }
+
+  const handleForceOff = () => {
+    if (status !== 'OFF') {
+      forceOff()
+      unlockAchievement('force-shutdown')
+    }
   }
 
   // Offset power button slightly on the Z and Y axis from the tower center
@@ -83,6 +91,8 @@ export function Tower3D({ position, highlight }: Tower3DProps) {
     interactionId: 'pc-power-button',
     interactionLabel: status === 'OFF' ? 'Allumer le PC' : 'Éteindre le PC',
     onInteract: handleTogglePower,
+    onHoldComplete: handleForceOff,
+    holdThreshold: 2.0,
   })
 
   // Dynamic emissive properties based on power state

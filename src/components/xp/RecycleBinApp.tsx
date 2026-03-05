@@ -5,6 +5,7 @@ import { useWM, useWindowState } from './WindowManager'
 import { MenuBar, MenuDef } from './MenuBar'
 import { XPAlert } from './XPAlert'
 import { XPToolbarButton } from './shared/XPToolbarButton'
+import { unlockAchievement } from '@/components/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  Recycle Bin App (Corbeille)
@@ -215,7 +216,7 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
                         </div>
                         <div
                             style={{ padding: '6px 12px', color: '#0B33A5', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                            onClick={() => { setAlert({ title: 'Restauration impossible', message: 'Je crois qu\'il vaut mieux laisser ces éléments où ils sont...' }) }}
+                            onClick={() => { unlockAchievement('recycle-restore'); setAlert({ title: 'Restauration impossible', message: 'Je crois qu\'il vaut mieux laisser ces éléments où ils sont...' }) }}
                             onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline' }}
                             onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none' }}
                         >
