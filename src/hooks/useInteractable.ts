@@ -5,6 +5,7 @@ import { useRef, useCallback, type MutableRefObject } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import { useInteractionTarget } from '@/components/InteractionStore'
+import { useComputerFocus } from '@/components/ComputerFocusStore'
 
 /** Default interaction distance shared across all interactable objects. */
 export const INTERACT_DISTANCE = 3
@@ -67,7 +68,8 @@ export function useInteractable({
 
   /* ── Raycaster highlight ── */
   const target = useInteractionTarget()
-  const isHighlighted = target?.id === id
+  const focusState = useComputerFocus()
+  const isHighlighted = target?.id === id && !focusState.focused
 
   /* ── Group ref ── */
   const groupRef = useRef<THREE.Group | null>(null)
