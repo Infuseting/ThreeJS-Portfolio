@@ -44,7 +44,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: 'tetris-master',
     title: 'Tetris Master',
-    description: 'Vous avez atteint un score de 10 000 au Tetris. Vous êtes un vrai gamer.',
+    description: 'Vous avez atteint un score de 10 000 au Tetris. Vous êtes un vrai gamerz.',
     rarity: 'LEGENDARY',
     image: '/achievements/tetris-master.png',
   },
@@ -54,6 +54,20 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Vous avez cliqué 10 fois d\'affilée sur un interrupteur. Vous avez un tic nerveux ou quoi ?',
     rarity: 'RARE',
     image: '/achievements/jour-nuit.png',
+  },
+  {
+    id: 'harceleur',
+    title: 'Harceleur',
+    description: 'Vous avez cliqué sur Cleepy plus de 25 fois d\'affilée. Il n\'a rien demandé, mais vous avez insisté. Bravo, vous êtes officiellement un harceleur numérique.',
+    rarity: 'EPIC',
+    image: '/achievements/harceleur.png',
+  },
+  {
+    id: 'resto_clippy',
+    title: 'Pardon',
+    description: 'Vous avez sorti Cleepy de la corbeille. C\'est un acte de grande bonté.',
+    rarity: 'EPIC',
+    image: '/achievements/resto-clippy.png',
   },
 ]
 

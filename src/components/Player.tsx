@@ -6,6 +6,7 @@ import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls, PointerLockControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, useRapier, RapierRigidBody } from '@react-three/rapier'
 import { useComputerFocus, useComputerFocusActions } from '@/components/ComputerFocusStore'
+import { useInfoPanel } from '@/components/InfoPanelStore'
 
 const SPEED = 5.0
 const direction = new THREE.Vector3()
@@ -21,8 +22,10 @@ export function Player() {
   // Computer focus
   const focusState = useComputerFocus()
   const { exit: exitFocus } = useComputerFocusActions()
+  const { panel } = useInfoPanel()
   const isFocused = focusState.focused
-  
+  const isBlocked = isFocused || panel !== null
+
   // Audio state
   const audioRef = useRef<HTMLAudioElement | null>(null)
   // Track time since last footstep
@@ -69,8 +72,8 @@ export function Player() {
   useFrame((state) => {
     if (!rigidBody.current) return
 
-    // When focused on a computer, freeze the player and stop footsteps
-    if (isFocused) {
+    // When focused on a computer or info panel is open, freeze the player and stop footsteps
+    if (isBlocked) {
       const velocity = rigidBody.current.linvel()
       rigidBody.current.setLinvel({ x: 0, y: velocity.y, z: 0 }, true)
       handleFootsteps(false, false)
@@ -87,7 +90,7 @@ export function Player() {
     // Calculate movement direction relative to camera
     frontVector.set(0, 0, Number(backward) - Number(forward))
     sideVector.set(Number(left) - Number(right), 0, 0)
-    
+
     // Normalize and apply rotation from camera
     direction
       .subVectors(frontVector, sideVector)
@@ -113,7 +116,7 @@ export function Player() {
     // Footsteps
     const isMoving = Math.abs(velocity.x) > 0.5 || Math.abs(velocity.z) > 0.5
     handleFootsteps(isMoving, isGrounded)
-    
+
     // Void Reset
     if (translation.y < -10) {
       rigidBody.current.setTranslation({ x: 1, y: 1, z: 0 }, true)
@@ -123,7 +126,7 @@ export function Player() {
 
   return (
     <>
-      {!isFocused && <PointerLockControls ref={pointerControlsRef} />}
+      {!isBlocked && <PointerLockControls ref={pointerControlsRef} />}
       <RigidBody
         ref={rigidBody}
         colliders={false}
@@ -135,7 +138,7 @@ export function Player() {
         {/* CapsuleCollider args: [halfHeight, radius]. Total height = 2 * (halfHeight + radius)
             We want total height = 1.95. If radius = 0.5, then halfHeight = (1.95 - 2*0.5)/2 = 0.475 */}
         <CapsuleCollider args={[0.475, 0.5]} />
-        
+
       </RigidBody>
     </>
   )

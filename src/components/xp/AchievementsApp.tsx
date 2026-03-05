@@ -32,11 +32,15 @@ export function AchievementsApp({ windowId }: AchievementsAppProps) {
   const { unlocked, unseen } = useAchievements()
 
   // Mark all new achievements as viewed when the user closes/leaves this app
+  // Also trigger Clippy's reaction if all achievements are unlocked
   useEffect(() => {
+    if (unlocked.size === ACHIEVEMENTS.length) {
+      import('@/components/xp/ClippyStore').then(m => m.clippySayAllAchievementsUnlocked())
+    }
     return () => {
       markAchievementsViewed()
     }
-  }, [])
+  }, [unlocked.size])
 
   // Sort achievements: Unlocked first, then by original order
   const sortedAchievements = useMemo(() => {
@@ -46,7 +50,7 @@ export function AchievementsApp({ windowId }: AchievementsAppProps) {
       const bUnlocked = unlocked.has(b.id)
       if (aUnlocked && !bUnlocked) return -1
       if (!aUnlocked && bUnlocked) return 1
-      return 0 // Keep original order for same unlocked status
+      return a.rarity < b.rarity ? -1 : 1
     })
     return sorted
   }, [unlocked])

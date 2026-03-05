@@ -32,6 +32,7 @@ import { AudioIframe } from './xp/AudioIframe'
 import { useOpenApp } from '@/hooks/useOpenApp'
 import { useComputerPower, useComputerPowerActions } from '@/components/ComputerPowerStore'
 import { AchievementsApp } from './xp/AchievementsApp'
+import { Clippy } from './xp/Clippy'
 import type { AppType } from './xp/WindowManager'
 
 /* ═══════════════════════════════════════════════
@@ -206,7 +207,7 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         <DesktopIcon label="Paint" icon="🎨" onDoubleClick={() => openApp('paint')} />
         <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={() => openApp('pinball')} />
         <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={() => openApp('file-explorer')} />
-        <DesktopIcon label="Corbeille" icon="🗑️" onDoubleClick={() => openApp('recycle-bin')} />
+        <DesktopIcon id="recycle-bin" label="Corbeille" icon="🗑️" onDoubleClick={() => openApp('recycle-bin')} />
         <DesktopIcon label="Succès" icon="🏆" onDoubleClick={() => openApp('achievements')} />
       </div>
 
@@ -247,6 +248,9 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         onOpenDateTime={openDateTime}
         clock={clock}
       />
+
+      {/* ─── Cleepy assistant ─── */}
+      <Clippy openApp={openApp} desktopW={width} desktopH={height} />
 
       {/* ─── Custom cursor ─── */}
       <XPCursor x={cursorPos.x} y={cursorPos.y} type={overrideCursor} />

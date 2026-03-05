@@ -3,17 +3,19 @@
 import { useState } from 'react'
 
 interface DesktopIconProps {
+  id?: string
   icon: string
   label: string
   onDoubleClick: () => void
 }
 
 /** A single clickable icon on the XP desktop. */
-export function DesktopIcon({ icon, label, onDoubleClick }: DesktopIconProps) {
+export function DesktopIcon({ id, icon, label, onDoubleClick }: DesktopIconProps) {
   const [selected, setSelected] = useState(false)
 
   return (
     <div
+      data-app-id={id}
       onClick={() => setSelected(true)}
       onDoubleClick={onDoubleClick}
       onBlur={() => setSelected(false)}

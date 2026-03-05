@@ -573,6 +573,12 @@ function FileRow({
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
       onBlur={() => setSelected(false)}
+      draggable
+      onDragStart={(e) => {
+        // Set the drag payload to be the file name and type so Clippy knows what was dropped
+        e.dataTransfer.setData('text/plain', JSON.stringify({ name: entry.name, type: entry.type }))
+        e.dataTransfer.effectAllowed = 'copyMove'
+      }}
       tabIndex={0}
       style={{
         background: selected ? '#316AC5' : 'transparent',

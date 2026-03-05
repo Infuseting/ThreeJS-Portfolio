@@ -5,7 +5,7 @@ import { useWM, useWindowState } from './WindowManager'
 import { MenuBar, MenuDef } from './MenuBar'
 import { XPAlert } from './XPAlert'
 import { XPToolbarButton } from './shared/XPToolbarButton'
-import { unlockAchievement } from '@/components/AchievementStore'
+import { unlockAchievement, useAchievements, ACHIEVEMENTS } from '@/components/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  Recycle Bin App (Corbeille)
@@ -25,6 +25,8 @@ interface DeletedFile {
     content: string // Easter egg content
 }
 
+import { useClippy, restoreClippy } from './ClippyStore'
+
 const INITIAL_FILES: DeletedFile[] = [
     {
         id: '1',
@@ -33,29 +35,29 @@ const INITIAL_FILES: DeletedFile[] = [
         date: 'Lundi d\'hiver à 08h00',
         size: '0 Ko',
         originalLocation: 'C:\\Users\\Arthur\\Cerveau',
-        content: 'Fichier introuvable. Avez-vous essayé de prendre un café ?'
+        content: 'Fichier corrompu. Impossible de trouver la motivation nécessaire pour exécuter cette tâche.'
     },
     {
         id: '2',
-        name: 'code_sans_bugs.txt',
-        icon: '📝',
-        date: 'Jamais',
-        size: 'Mythe',
-        originalLocation: 'Terre du Milieu',
-        content: 'Ce fichier est une légende urbaine racontée aux développeurs juniors pour les endormir le soir.'
+        name: 'ancien_portfolio_v1.html',
+        icon: '🌐',
+        date: '2021',
+        size: '45 Ko',
+        originalLocation: 'C:\\Users\\Arthur\\Documents',
+        content: '<html><body><h1>Bienvenue sur mon portfolio de 2021</h1><marquee>En construction !</marquee></body></html>'
     },
     {
         id: '3',
-        name: 'client_feedback_v12_FINAL_v2_vrai.pdf',
-        icon: '📄',
-        date: 'Il y a 2 ans',
-        size: '450 Mo (que des screenshots flous)',
-        originalLocation: 'C:\\Projets\\AuSecours',
-        content: '"Pouvez-vous juste rajouter un petit bouton qui fait de l\'intelligence artificielle ? Ça devrait prendre 5 minutes non ?"'
+        name: 'TODO_important.txt',
+        icon: '📝',
+        date: 'Il y a 6 mois',
+        size: '1 Ko',
+        originalLocation: 'C:\\Desktop',
+        content: '- Finir le projet\n- Apprendre le Rust\n- Aller à la salle de sport\n\n(Note: aucun de ces objectifs n\'a été atteint)'
     },
     {
         id: '4',
-        name: 'Internet Explorer 6.lnk',
+        name: 'Internet_Explorer.exe',
         icon: '🌐',
         date: '2001',
         size: 'Trop lourd pour l\'humanité',
@@ -65,21 +67,48 @@ const INITIAL_FILES: DeletedFile[] = [
 ]
 
 export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
-    const win = useWindowState(windowId)
     const wm = useWM()
-    const [files, setFiles] = useState<DeletedFile[]>(INITIAL_FILES)
+    const winState = useWindowState(windowId)
+    const clippyState = useClippy()
+
+    // Combine standard deleted files with Clippy if he was deleted
+    const allFiles = [...INITIAL_FILES]
+    if (clippyState.isDeleted) {
+        allFiles.push({
+            id: 'clippy',
+            name: 'Cleepy_le_harcelé.exe',
+            icon: '📎',
+            date: "Aujourd'hui",
+            size: '1 âme',
+            originalLocation: 'C:\\Windows\\System32\\',
+            content: "Au secours ! Sortez-moi de là ! Il y a des araignées dans cette corbeille !"
+        })
+    }
+
+    const [files, setFiles] = useState<DeletedFile[]>(allFiles)
     const [selectedFileId, setSelectedFileId] = useState<string | null>(null)
 
     // Custom dialog for easter eggs
     const [alert, setAlert] = useState<{ title: string, message: string } | null>(null)
 
+    const { unlocked } = useAchievements()
+
+    const handleRestore = () => {
+        if (selectedFileId === 'clippy') {
+            const isFinalAchievement = !unlocked.has('resto_clippy') && unlocked.size === ACHIEVEMENTS.length - 1
+            restoreClippy(isFinalAchievement)
+        }
+        setFiles(f => f.filter(file => file.id !== selectedFileId))
+        setSelectedFileId(null)
+    }
+
     const menus: MenuDef[] = [
         {
             label: 'Fichier',
             items: [
-                { label: 'Restaurer', disabled: selectedFileId === null },
+                { label: 'Restaurer', onClick: handleRestore, disabled: selectedFileId === null },
                 { divider: true },
-                { label: 'Vider la corbeille', onClick: () => setFiles([]), disabled: files.length === 0 },
+                { label: 'Vider la corbeille', onClick: () => { handleEmptyBin() }, disabled: files.length === 0 },
                 { divider: true },
                 { label: 'Fermer', onClick: () => wm.closeWindow(windowId) }
             ]
@@ -128,7 +157,7 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
         }
     ]
 
-    if (!win) return null
+    if (!winState) return null
 
     const handleEmptyBin = () => {
         if (files.length === 0) return
@@ -140,14 +169,19 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
 
     const confirmEmpty = () => {
         setFiles([])
+        setSelectedFileId(null)
         setAlert(null)
     }
 
     const handleDoubleClick = (file: DeletedFile) => {
-        setAlert({
-            title: `Ouverture de ${file.name}`,
-            message: file.content
-        })
+        if (file.id === 'clippy') {
+            handleRestore()
+        } else {
+            setAlert({
+                title: `Ouverture de ${file.name}`,
+                message: file.content
+            })
+        }
     }
 
     const selectedFile = files.find(f => f.id === selectedFileId)
@@ -216,7 +250,14 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
                         </div>
                         <div
                             style={{ padding: '6px 12px', color: '#0B33A5', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                            onClick={() => { unlockAchievement('recycle-restore'); setAlert({ title: 'Restauration impossible', message: 'Je crois qu\'il vaut mieux laisser ces éléments où ils sont...' }) }}
+                            onClick={() => {
+                                unlockAchievement('recycle-restore')
+                                setAlert({ title: 'Restauration impossible', message: 'Je crois qu\'il vaut mieux laisser ces éléments où ils sont...' })
+                                if (files.find(f => f.id === 'clippy')) {
+                                    const isFinalAchievement = !unlocked.has('resto_clippy') && unlocked.size === ACHIEVEMENTS.length - 1
+                                    restoreClippy(isFinalAchievement)
+                                }
+                            }}
                             onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline' }}
                             onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none' }}
                         >
