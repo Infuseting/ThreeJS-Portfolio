@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useWindowState } from '@/components/xp/core/WindowManager'
 import { XPTabButton } from '@/components/xp/shared/XPTabButton'
 import { xpButtonCompactStyle } from '@/components/xp/shared/xpStyles'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  Control Panel App
@@ -103,7 +104,7 @@ export function ControlPanelApp({ windowId, currentBg, onChangeBg }: ControlPane
                                 {BACKGROUNDS.map((bg, i) => (
                                     <div
                                         key={i}
-                                        onClick={() => onChangeBg(bg.value)}
+                                        onClick={() => { onChangeBg(bg.value); unlockAchievement('nostalgique') }}
                                         style={{
                                             padding: '2px 4px',
                                             backgroundColor: currentBg === bg.value ? '#316AC5' : 'transparent',

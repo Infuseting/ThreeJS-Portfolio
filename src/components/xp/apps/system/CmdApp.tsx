@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 export function CmdApp({ windowId }: { windowId: string }) {
     const [history, setHistory] = useState([
@@ -17,6 +18,18 @@ export function CmdApp({ windowId }: { windowId: string }) {
         let output: string[] = []
 
         if (trimmed) {
+            const lowerCmd = trimmed.toLowerCase()
+
+            if (lowerCmd === 'color 0a') unlockAchievement('matrix')
+            if (lowerCmd.includes('rm -rf') || lowerCmd.includes('del /s /q') || lowerCmd === 'format c:') unlockAchievement('hackerman')
+            if (lowerCmd === 'ping infuseting.fr') {
+                unlockAchievement('ping-pong')
+                output = ['Envoi d\'une requête \'ping\' sur infuseting.fr [104.21.XX.XX] avec 32 octets de données :', 'Réponse de 104.21.XX.XX : octets=32 temps<1ms TTL=64', 'Pong !']
+                setHistory([...history, `C:\\SerretA>${cmd}`, ...output, ''])
+                setInput('')
+                return
+            }
+
             const args = trimmed.split(' ')
             const command = args[0].toLowerCase()
 
@@ -25,6 +38,7 @@ export function CmdApp({ windowId }: { windowId: string }) {
                     output = ['Commandes disponibles : help, whoami, skills, projects, clear, echo, date']
                     break
                 case 'whoami':
+                    unlockAchievement('identity-crisis')
                     output = ['Développeur Passionné', 'Étudiant en BUT Informatique']
                     break
                 case 'skills':

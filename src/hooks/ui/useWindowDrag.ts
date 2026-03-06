@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useCallback } from 'react'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  useWindowDrag
@@ -28,6 +29,9 @@ export function useWindowDrag(opts: UseWindowDragOpts) {
     startY: number
     startWinX: number
     startWinY: number
+    totalDistance: number
+    lastX: number
+    lastY: number
   } | null>(null)
 
   const onTitlePointerDown = useCallback(
@@ -44,11 +48,25 @@ export function useWindowDrag(opts: UseWindowDragOpts) {
         startY: e.clientY,
         startWinX: opts.winX,
         startWinY: opts.winY,
+        totalDistance: 0,
+        lastX: e.clientX,
+        lastY: e.clientY,
       }
 
       const onMove = (ev: PointerEvent) => {
         const d = dragRef.current
         if (!d) return
+
+        // Track dragged distance
+        const dist = Math.sqrt(Math.pow(ev.clientX - d.lastX, 2) + Math.pow(ev.clientY - d.lastY, 2))
+        d.totalDistance += dist
+        d.lastX = ev.clientX
+        d.lastY = ev.clientY
+
+        if (d.totalDistance > 4000) {
+          unlockAchievement('drag-drop-master')
+        }
+
         const { dx, dy } = opts.screenToVirtual(ev.clientX - d.startX, ev.clientY - d.startY)
         opts.move(opts.windowId, d.startWinX + dx, d.startWinY + dy)
       }

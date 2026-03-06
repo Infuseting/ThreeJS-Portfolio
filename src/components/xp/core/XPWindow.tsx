@@ -3,12 +3,14 @@
 import {
   useCallback,
   useState,
+  useRef,
   type ReactNode,
   type CSSProperties,
 } from 'react'
 import { useWM, useWindowState, type WindowManager, type XPWindowState } from './WindowManager'
 import { useWindowDrag } from '@/hooks/ui/useWindowDrag'
 import { useWindowResize } from '@/hooks/ui/useWindowResize'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  XP Window
@@ -192,12 +194,33 @@ function TitleBar({ win, maximized, onPointerDown, onDoubleClick, onMinimize, on
 
 function TitleBtn({ label, bg, onClick }: { label: string; bg: string; onClick: () => void }) {
   const [hover, setHover] = useState(false)
+  const clickCount = useRef(0)
+  const lastClick = useRef(0)
+
+  const handleBtnClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (label === '✕') {
+      const now = Date.now()
+      if (now - lastClick.current < 2000) {
+        clickCount.current += 1
+        if (clickCount.current >= 5) {
+          unlockAchievement('rage-quit')
+          clickCount.current = 0
+        }
+      } else {
+        clickCount.current = 1
+      }
+      lastClick.current = now
+    }
+    onClick()
+  }
+
   return (
     <button
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => { e.stopPropagation(); onClick() }}
+      onClick={handleBtnClick}
       style={{
         width: 24, height: 22,
         border: '1px solid rgba(0,0,0,0.3)', borderRadius: 3,

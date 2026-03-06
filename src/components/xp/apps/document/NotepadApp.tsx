@@ -1,69 +1,94 @@
 'use client'
 
-import { useState } from 'react'
-import { withBaseApp } from '@/components/xp/infrastructure/hoc/withBaseApp'
+import { useState, useEffect } from 'react'
+import { AppContent } from '@/components/xp/infrastructure/base/AppContent'
+import { useAppState } from '@/components/xp/infrastructure/hooks/useAppState'
+import { useAppAlert } from '@/components/xp/infrastructure/hooks/useAppAlert'
 import { FILE_EDIT_VIEW_HELP } from '@/components/xp/infrastructure/registries/menuRegistry'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 const INITIAL_TEXT = 'Bonjour !\n\nBienvenue sur mon portfolio.\nJe suis un développeur passionné...\nN\'hésitez pas à explorer l\'ordinateur et les differents elements disponibles en dehors de l\'ordinateur.'
 
-/**
- * Composant de contenu - Logique métier uniquement (gestion du texte)
- * Le layout, les menus, les alerts sont fournis par le HOC
- */
-function NotepadContent() {
+export function NotepadApp({ windowId }: { windowId: string }) {
+    const context = useAppState(windowId)
+    const alert = useAppAlert('Bloc-notes')
     const [text, setText] = useState(INITIAL_TEXT)
+    const [isSaved, setIsSaved] = useState(true)
 
-    return (
-        <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            style={{
-                flex: 1,
-                width: '100%',
-                height: '100%',
-                boxSizing: 'border-box',
-                display: 'block',
-                border: 'none',
-                outline: 'none',
-                padding: 8,
-                resize: 'none',
-                fontFamily: 'Courier New, Courier, monospace',
-                fontSize: 14,
-                backgroundColor: '#fff',
-                color: '#000',
-                lineHeight: '1.4',
-                whiteSpace: 'pre-wrap',
-            }}
-            spellCheck={false}
-        />
-    )
-}
+    // Trigger ecrivain-rate achievement on close if text is modified and unsaved
+    useEffect(() => {
+        context.registerCloseHook(() => {
+            if (!isSaved && text !== INITIAL_TEXT) {
+                unlockAchievement('ecrivain-rate')
+            }
+            return true // allow window to close
+        })
+        return () => context.unregisterCloseHook()
+    }, [context, isSaved, text])
 
-/**
- * App Notepad refactorisé avec HOC withBaseApp
- * 
- * Avant: 90 lignes
- * Après: ~30 lignes (67% réduction)
- * 
- * Avantages:
- * - Extraction de la logique commune (layout, alert handling)
- * - Réutilisabilité des menus (FILE_EDIT_VIEW_HELP)
- * - Composant plus lisible et focalisé sur la logique métier
- * - Comportement uniforme avec autres apps
- * - Plus facile à tester isolément
- * - Maintien unifié des patterns XP
- */
-export const NotepadApp = withBaseApp(NotepadContent, {
-    menus: (context, alert) => FILE_EDIT_VIEW_HELP({
-        onNew: () => {},
-        onOpen: () => alert.showAlert('Fonction non implémentée.'),
-        onSave: () => alert.showAlert('Tu ne peux pas enregistrer sur mon portfolio !'),
+    // Trigger grand-oeuvre achievement if text length > 1000
+    useEffect(() => {
+        if (text.length > 1000) {
+            unlockAchievement('grand-oeuvre')
+        }
+    }, [text])
+
+    // Guard: window might not exist
+    if (!context.win) return null
+
+    const handleSave = () => {
+        const blob = new Blob([text], { type: 'text/plain' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'portfolio_notes.txt'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        setIsSaved(true)
+    }
+
+    const menus = FILE_EDIT_VIEW_HELP({
+        onNew: () => { setText(''); setIsSaved(true) },
+        onOpen: () => alert.showAlert('Fonction non implémentée. (Mais tu peux essayer de glisser-déposer un fichier ! ...ah non, pas encore)'),
+        onSave: handleSave,
         onQuit: () => context.closeWindow(),
-        onDelete: () => {},
+        onDelete: () => { setText(''); setIsSaved(false) },
         onAbout: () => alert.showAlert('Bloc-notes XP (Version Portfolio)'),
         appName: 'Bloc-notes',
-    }),
-    backgroundColor: '#fff',
-    alertTitle: 'Bloc-notes',
-    showAlert: true,
-})
+    })
+
+    return (
+        <AppContent
+            menus={menus}
+            alert={alert.alert}
+            alertTitle="Bloc-notes"
+            onCloseAlert={alert.closeAlert}
+            backgroundColor="#fff"
+        >
+            <textarea
+                value={text}
+                onChange={(e) => { setText(e.target.value); setIsSaved(false) }}
+                style={{
+                    flex: 1,
+                    width: '100%',
+                    height: '100%',
+                    boxSizing: 'border-box',
+                    display: 'block',
+                    border: 'none',
+                    outline: 'none',
+                    padding: 8,
+                    resize: 'none',
+                    fontFamily: 'Courier New, Courier, monospace',
+                    fontSize: 14,
+                    backgroundColor: '#fff',
+                    color: '#000',
+                    lineHeight: '1.4',
+                    whiteSpace: 'pre-wrap',
+                }}
+                spellCheck={false}
+            />
+        </AppContent>
+    )
+}

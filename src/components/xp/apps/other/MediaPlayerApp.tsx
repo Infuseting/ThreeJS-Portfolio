@@ -97,10 +97,10 @@ export function MediaPlayerApp({ windowId }: { windowId: string }) {
                         // Start muted so autoplay is allowed by browsers, then try to unmute
                         try {
                             event.target.mute()
-                        } catch {}
+                        } catch { }
                         try {
                             event.target.playVideo()
-                        } catch {}
+                        } catch { }
 
                         // After playback starts, attempt to apply desired volume and unmute
                         setTimeout(() => {
@@ -110,8 +110,8 @@ export function MediaPlayerApp({ windowId }: { windowId: string }) {
                                 if (effective === 0 || volState.masterMuted || volState.apps[windowId]?.muted) {
                                     // keep muted
                                 } else {
-                                    try { event.target.unMute() } catch {}
-                                    try { event.target.setVolume(effective) } catch {}
+                                    try { event.target.unMute() } catch { }
+                                    try { event.target.setVolume(effective) } catch { }
                                 }
                             } catch {
                                 // ignore

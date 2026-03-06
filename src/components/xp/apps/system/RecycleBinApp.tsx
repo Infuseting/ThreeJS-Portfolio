@@ -108,7 +108,7 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
             items: [
                 { label: 'Restaurer', onClick: handleRestore, disabled: selectedFileId === null },
                 { divider: true },
-                { label: 'Vider la corbeille', onClick: () => { handleEmptyBin() }, disabled: files.length === 0 },
+                { label: 'Vider la corbeille', onClick: () => { handleEmptyBin() } },
                 { divider: true },
                 { label: 'Fermer', onClick: () => wm.closeWindow(windowId) }
             ]
@@ -160,7 +160,14 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
     if (!winState) return null
 
     const handleEmptyBin = () => {
-        if (files.length === 0) return
+        if (files.length === 0) {
+            unlockAchievement('nettoyeur-compulsif')
+            setAlert({
+                title: 'Corbeille vide',
+                message: 'La corbeille est déjà vide. Vous êtes vraiment un maniaque de la propreté numérique.'
+            })
+            return
+        }
         setAlert({
             title: 'Vider la corbeille',
             message: 'Êtes-vous sûr de vouloir supprimer définitivement ces éléments et perdre ces magnifiques blagues ?'
@@ -213,7 +220,7 @@ export function RecycleBinApp({ windowId }: RecycleBinAppProps) {
                 <XPToolbarButton icon="⬅️" label="Précédente" disabled />
                 <XPToolbarButton icon="➡️" label="Suivante" disabled />
                 <div style={{ width: 1, backgroundColor: '#ACA899', margin: '0 4px' }} />
-                <XPToolbarButton icon="🗑️" label="Vider..." onClick={handleEmptyBin} disabled={files.length === 0} />
+                <XPToolbarButton icon="🗑️" label="Vider..." onClick={handleEmptyBin} />
             </div>
 
             {/* Address Bar */}

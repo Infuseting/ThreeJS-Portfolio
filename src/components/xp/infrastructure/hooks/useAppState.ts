@@ -24,13 +24,15 @@ export interface AppStateContext {
   // Gestion des alerts - NOTE: Gérées par useAppAlert dans le HOC
   // Ces propriétés ne sont juste que des références (pour compatibilité)
   // Les alerts réelles sont gérées via le hook useAppAlert injecté
-  
+
   // Actions de fenêtre
   closeWindow: () => void
   setTitle: (title: string) => void
   updateSize: (w: number, h: number) => void
   minimize: () => void
   maximize: () => void
+  registerCloseHook: (hook: () => boolean) => void
+  unregisterCloseHook: () => void
 }
 
 /**
@@ -49,6 +51,8 @@ export function useAppState(windowId: string): AppStateContext {
     updateSize: (w: number, h: number) => wm.resizeWindow(windowId, w, h),
     minimize: () => wm.minimizeWindow(windowId),
     maximize: () => wm.toggleMaximize(windowId),
+    registerCloseHook: (hook: () => boolean) => wm.registerCloseHook(windowId, hook),
+    unregisterCloseHook: () => wm.unregisterCloseHook(windowId),
   }
 }
 

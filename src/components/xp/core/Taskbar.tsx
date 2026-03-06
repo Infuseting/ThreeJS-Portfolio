@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { useWM, useWMState } from './WindowManager'
 import { TaskbarButton } from './TaskbarButton'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 interface TaskbarProps {
   taskbarH: number
@@ -16,6 +18,22 @@ interface TaskbarProps {
 export function Taskbar({ taskbarH, startOpen, onToggleStart, onOpenVolumeMixer, onOpenDateTime, clock }: TaskbarProps) {
   const wm = useWM()
   const wmState = useWMState()
+
+  // Start/Stop achievement tracker
+  const toggleCounter = useRef(0)
+  const toggleTimeout = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    toggleCounter.current += 1
+    if (toggleCounter.current >= 20) {
+      unlockAchievement('start-stop')
+      toggleCounter.current = 0
+    }
+    if (toggleTimeout.current) clearTimeout(toggleTimeout.current)
+    toggleTimeout.current = setTimeout(() => {
+      toggleCounter.current = 0
+    }, 2000)
+  }, [startOpen])
 
   return (
     <div

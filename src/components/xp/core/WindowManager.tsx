@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useCallback, useRef, useSyncExternalStore } from 'react'
 import { APP_REGISTRY } from '../contexts/appRegistry'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  XP Window Manager
@@ -11,7 +12,7 @@ import { APP_REGISTRY } from '../contexts/appRegistry'
  *  Drives the taskbar items.
  * ═══════════════════════════════════════════════ */
 
-export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv' | 'taskmgr' | 'outlook' | 'control-panel' | 'git-tracker' | 'recycle-bin' | 'volume-mixer' | 'datetime' | 'tetris' | 'achievements'
+export type AppType = 'file-explorer' | 'internet-explorer' | 'vscode' | 'minesweeper' | 'slitherio' | 'notepad' | 'cmd' | 'mediaplayer' | 'paint' | 'pinball' | 'cv' | 'taskmgr' | 'outlook' | 'control-panel' | 'git-tracker' | 'recycle-bin' | 'volume-mixer' | 'datetime' | 'tetris' | 'achievements' | 'calculator'
 
 export interface XPWindowState {
   id: string
@@ -46,6 +47,12 @@ type Listener = () => void
 function createWindowManager(desktopW: number, desktopH: number) {
   let state: WMState = { windows: [], nextZ: 1, focusedId: null, overrideCursor: 'default' }
   const listeners = new Set<Listener>()
+  const closeHooks = new Map<string, () => boolean>()
+
+  // Achievement tracking maps
+  const windowOpenTimes = new Map<string, number>()
+  const maximizeTracking = new Map<string, { count: number, lastTime: number }>()
+  const recentOpens: { appType: AppType, time: number }[] = []
 
   function emit() {
     listeners.forEach((l) => l())
@@ -107,6 +114,31 @@ function createWindowManager(desktopW: number, desktopH: number) {
       payload: opts?.payload,
     }
 
+    const numWindows = state.windows.length + 1
+    if (numWindows >= 20) unlockAchievement('bordelique')
+    else if (numWindows >= 10) unlockAchievement('multitache')
+
+    // Archiviste achievement
+    const explorerCount = state.windows.filter(w => w.appType === 'file-explorer').length + (appType === 'file-explorer' ? 1 : 0)
+    if (explorerCount >= 5) unlockAchievement('archiviste')
+
+    // Trop-lourd achievement
+    const hasPaint = appType === 'paint' || state.windows.some(w => w.appType === 'paint')
+    const hasPinball = appType === 'pinball' || state.windows.some(w => w.appType === 'pinball')
+    if (hasPaint && hasPinball) unlockAchievement('trop-lourd')
+
+    // Barre Saturée achievement
+    if (numWindows >= 15) unlockAchievement('barre-saturee')
+
+    // Speedrunner achievement: 3 different app types opened within 3 seconds
+    const now = Date.now()
+    recentOpens.push({ appType, time: now })
+    while (recentOpens.length > 0 && now - recentOpens[0].time > 3000) recentOpens.shift()
+    const uniqueTypes = new Set(recentOpens.map(o => o.appType))
+    if (uniqueTypes.size >= 3) unlockAchievement('speedrunner')
+
+    windowOpenTimes.set(id, Date.now())
+
     state = {
       ...state,
       windows: [...state.windows, win],
@@ -117,7 +149,19 @@ function createWindowManager(desktopW: number, desktopH: number) {
     return id
   }
 
-  function closeWindow(id: string) {
+  function closeWindow(id: string, force?: boolean) {
+    if (!force && closeHooks.has(id)) {
+      const shouldClose = closeHooks.get(id)!()
+      if (!shouldClose) return
+    }
+
+    // Perdu achievement
+    const openTime = windowOpenTimes.get(id)
+    if (openTime && Date.now() - openTime < 1000) {
+      unlockAchievement('perdu')
+    }
+    windowOpenTimes.delete(id)
+    maximizeTracking.delete(id)
     state = {
       ...state,
       windows: state.windows.filter((w) => w.id !== id),
@@ -154,6 +198,21 @@ function createWindowManager(desktopW: number, desktopH: number) {
   }
 
   function toggleMaximize(id: string) {
+    // Indécis achievement
+    const tracking = maximizeTracking.get(id) || { count: 0, lastTime: 0 }
+    const now = Date.now()
+    if (now - tracking.lastTime < 2000) {
+      tracking.count += 1
+      if (tracking.count >= 5) {
+        unlockAchievement('indecis')
+        tracking.count = 0
+      }
+    } else {
+      tracking.count = 1
+    }
+    tracking.lastTime = now
+    maximizeTracking.set(id, tracking)
+
     state = {
       ...state,
       windows: state.windows.map((w) => {
@@ -190,6 +249,11 @@ function createWindowManager(desktopW: number, desktopH: number) {
         // Prevent the title bar from going below the taskbar (desktopH - taskbarH - titlebarH)
         // Taskbar is 40px tall, title bar is ~30px. So max Y is desktopH - 70.
         const clampY = clamp(y, 0, desktopH - 70)
+
+        // Cache-cache achievement
+        if (clampX <= -w.w + 65 || clampX >= desktopW - 65) {
+          unlockAchievement('cache-cache')
+        }
 
         return { ...w, x: clampX, y: clampY, maximized: false }
       }),
@@ -228,6 +292,14 @@ function createWindowManager(desktopW: number, desktopH: number) {
     emit()
   }
 
+  function registerCloseHook(id: string, hook: () => boolean) {
+    closeHooks.set(id, hook)
+  }
+
+  function unregisterCloseHook(id: string) {
+    closeHooks.delete(id)
+  }
+
   const wm = {
     subscribe,
     getSnapshot,
@@ -240,6 +312,8 @@ function createWindowManager(desktopW: number, desktopH: number) {
     resizeWindow,
     updateTitle,
     setOverrideCursor,
+    registerCloseHook,
+    unregisterCloseHook,
   }
 
   // Open Notepad by default

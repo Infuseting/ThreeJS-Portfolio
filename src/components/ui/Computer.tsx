@@ -109,6 +109,18 @@ export function Computer({
     onInteract: handleInteract,
   })
 
+  /* ── Hardware Master: interact with the tower ── */
+  const handleTowerInteract = useCallback(() => {
+    unlockAchievement('hardware-master')
+  }, [])
+
+  const { interactiveRef: towerRef, isHighlighted: towerHighlighted } = useInteractable({
+    position: [position[0] + DESK_W / 2 - 0.2, position[1] + 0.25, position[2]],
+    interactionId: 'tower-3d',
+    interactionLabel: 'Inspecter l\'unité centrale',
+    onInteract: handleTowerInteract,
+  })
+
   /* ── Camera lerp when focused ── */
   useFrame((state) => {
     if (isFocused && focusState.cameraPosition) {

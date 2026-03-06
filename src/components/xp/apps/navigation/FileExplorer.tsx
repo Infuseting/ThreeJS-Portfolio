@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, type MouseEvent as ReactMouseEvent } from 'react'
 import { useWM } from '@/components/xp/core/WindowManager'
 import { formatSize } from '@/utils/format/formatSize'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  File Explorer  (Windows XP style)
@@ -91,6 +92,10 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
 
     try {
       if (crumb.source === 'local') {
+        if (!crumb.localPath) {
+          unlockAchievement('curieux')
+        }
+
         // Fetch the manifest for this local path
         const manifestUrl = crumb.localPath
           ? `/computer_storage/${crumb.localPath}/manifest.json`
@@ -213,14 +218,15 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
   /* ── Context menu state ── */
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; entry: FSEntry } | null>(null)
 
-  const onContextMenu = useCallback((e: ReactMouseEvent, entry: FSEntry) => {
+  const onContextMenu = useCallback((e: ReactMouseEvent, entry?: FSEntry) => {
     e.preventDefault()
     e.stopPropagation()
     // Position relative to the file explorer content area
     const rect = (e.currentTarget as HTMLElement).closest('table')?.parentElement?.getBoundingClientRect()
     const x = rect ? e.clientX - rect.left : e.clientX
     const y = rect ? e.clientY - rect.top : e.clientY
-    setCtxMenu({ x, y, entry })
+    // Fallback to empty entry for general context menu
+    setCtxMenu({ x, y, entry: entry || { name: '', type: 'dir' } })
   }, [])
 
   // Close context menu on any click
@@ -375,7 +381,7 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
       </div>
 
       {/* ── Content ── */}
-      <div onClick={closeCtxMenu} style={{ flex: 1, overflow: 'auto', background: '#fff', padding: 4, position: 'relative' }}>
+      <div onContextMenu={(e) => onContextMenu(e)} onClick={closeCtxMenu} style={{ flex: 1, overflow: 'auto', background: '#fff', padding: 4, position: 'relative' }}>
         {loading && (
           <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>
             Chargement...
@@ -460,80 +466,94 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
               fontSize: 13,
             }}
           >
-            {/* File → "Ouvrir avec VS Code" */}
-            {ctxMenu.entry.type === 'file' && current.source === 'github' && current.repo && (
+            {/* Context Menu for empty space vs files */}
+            {!ctxMenu.entry.name ? (
               <CtxMenuItem
-                label="Ouvrir avec VS Code"
-                icon="💻"
+                label="Afficher les fichiers cachés"
+                icon="👁️"
                 onClick={() => {
-                  openInVSCode(current.repo!, ctxMenu.entry.path)
+                  unlockAchievement('cachotier')
                   closeCtxMenu()
                 }}
               />
-            )}
+            ) : (
+              <>
+                {/* File → "Ouvrir avec VS Code" */}
+                {ctxMenu.entry.type === 'file' && current.source === 'github' && current.repo && (
+                  <CtxMenuItem
+                    label="Ouvrir avec VS Code"
+                    icon="💻"
+                    onClick={() => {
+                      openInVSCode(current.repo!, ctxMenu.entry.path)
+                      closeCtxMenu()
+                    }}
+                  />
+                )}
 
-            {/* File → "Ouvrir" (double-click behavior) */}
-            {ctxMenu.entry.type === 'file' && (
-              <CtxMenuItem
-                label="Ouvrir"
-                icon="📄"
-                onClick={() => {
-                  onDoubleClick(ctxMenu.entry)
-                  closeCtxMenu()
-                }}
-              />
-            )}
+                {/* File → "Ouvrir" (double-click behavior) */}
+                {ctxMenu.entry.type === 'file' && (
+                  <CtxMenuItem
+                    label="Ouvrir"
+                    icon="📄"
+                    onClick={() => {
+                      onDoubleClick(ctxMenu.entry)
+                      closeCtxMenu()
+                    }}
+                  />
+                )}
 
-            {/* Directory → "Ouvrir" */}
-            {ctxMenu.entry.type === 'dir' && (
-              <CtxMenuItem
-                label="Ouvrir"
-                icon="📂"
-                onClick={() => {
-                  onDoubleClick(ctxMenu.entry)
-                  closeCtxMenu()
-                }}
-              />
-            )}
+                {/* Directory → "Ouvrir" */}
+                {ctxMenu.entry.type === 'dir' && (
+                  <CtxMenuItem
+                    label="Ouvrir"
+                    icon="📂"
+                    onClick={() => {
+                      onDoubleClick(ctxMenu.entry)
+                      closeCtxMenu()
+                    }}
+                  />
+                )}
 
-            {/* Directory in GitHub → "Ouvrir en workspace dans VS Code" */}
-            {ctxMenu.entry.type === 'dir' && current.source === 'github' && current.repo && (
-              <CtxMenuItem
-                label="Ouvrir en workspace dans VS Code"
-                icon="💻"
-                onClick={() => {
-                  openInVSCode(current.repo!)
-                  closeCtxMenu()
-                }}
-              />
-            )}
+                {/* Directory in GitHub → "Ouvrir en workspace dans VS Code" */}
+                {ctxMenu.entry.type === 'dir' && current.source === 'github' && current.repo && (
+                  <CtxMenuItem
+                    label="Ouvrir en workspace dans VS Code"
+                    icon="💻"
+                    onClick={() => {
+                      openInVSCode(current.repo!)
+                      closeCtxMenu()
+                    }}
+                  />
+                )}
 
-            {/* Gitlink → "Ouvrir" */}
-            {ctxMenu.entry.type === 'gitlink' && (
-              <CtxMenuItem
-                label="Ouvrir"
-                icon="📂"
-                onClick={() => {
-                  onDoubleClick(ctxMenu.entry)
-                  closeCtxMenu()
-                }}
-              />
-            )}
+                {/* Gitlink → "Ouvrir" */}
+                {ctxMenu.entry.type === 'gitlink' && (
+                  <CtxMenuItem
+                    label="Ouvrir"
+                    icon="📂"
+                    onClick={() => {
+                      onDoubleClick(ctxMenu.entry)
+                      closeCtxMenu()
+                    }}
+                  />
+                )}
 
-            {/* Gitlink → "Ouvrir en workspace dans VS Code" */}
-            {ctxMenu.entry.type === 'gitlink' && (() => {
-              const meta = ctxMenu.entry.meta as { git_url?: string } | undefined
-              return meta?.git_url ? (
-                <CtxMenuItem
-                  label="Ouvrir en workspace dans VS Code"
-                  icon="💻"
-                  onClick={() => {
-                    openInVSCode(meta.git_url!)
-                    closeCtxMenu()
-                  }}
-                />
-              ) : null
-            })()}
+                {/* Gitlink → "Ouvrir en workspace dans VS Code" */}
+                {ctxMenu.entry.type === 'gitlink' && (() => {
+                  const meta = ctxMenu.entry.meta as { git_url?: string } | undefined
+                  return meta?.git_url ? (
+                    <CtxMenuItem
+                      label="Ouvrir en workspace dans VS Code"
+                      icon="💻"
+                      onClick={() => {
+                        openInVSCode(meta.git_url!)
+                        closeCtxMenu()
+                      }}
+                    />
+                  ) : null
+                })()}
+              </>
+            )}
           </div>
         )}
       </div>

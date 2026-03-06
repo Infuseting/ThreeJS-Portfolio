@@ -7,6 +7,7 @@ import { useKeyboardControls, PointerLockControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, useRapier, RapierRigidBody } from '@react-three/rapier'
 import { useComputerFocus, useComputerFocusActions } from '@/components/stores/ComputerFocusStore'
 import { useInfoPanel } from '@/components/stores/InfoPanelStore'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 const SPEED = 5.0
 const direction = new THREE.Vector3()
@@ -82,9 +83,26 @@ export function Player() {
 
     const { forward, backward, left, right, jump } = get()
     const velocity = rigidBody.current.linvel()
+    const translation = rigidBody.current.translation()
+
+    if (!isBlocked && !isFocused) {
+      // Zoom Zoom achievement! (Looking at the computer from 15m+ away)
+      const distToComputer = Math.hypot(translation.x - 9, translation.z - (-0.25))
+      if (distToComputer > 15) {
+        // Check if the player is looking toward the computer
+        const dirToComputer = new THREE.Vector3(9 - translation.x, 0, -0.25 - translation.z).normalize()
+        const camDir = new THREE.Vector3()
+        state.camera.getWorldDirection(camDir)
+        camDir.y = 0
+        camDir.normalize()
+        const dot = dirToComputer.dot(camDir)
+        if (dot > 0.8) {
+          unlockAchievement('zoom-zoom')
+        }
+      }
+    }
 
     // Update camera to match player body position (eyes level)
-    const translation = rigidBody.current.translation()
     state.camera.position.set(translation.x, translation.y + 0.75, translation.z)
 
     // Calculate movement direction relative to camera

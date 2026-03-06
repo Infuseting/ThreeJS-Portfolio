@@ -42,4 +42,5 @@ export const APP_REGISTRY: Record<AppType, AppConfig> = {
   'volume-mixer': { appType: 'volume-mixer', title: 'Contrôle du volume', icon: '🔊', w: 400, h: 300, isFixedSize: true },
   'datetime': { appType: 'datetime', title: 'Propriétés de Date et heure', icon: '🕒', w: 420, h: 450, isFixedSize: true },
   'achievements': { appType: 'achievements', title: 'Succès', icon: '🏆', w: 500, h: 400 },
+  'calculator': { appType: 'calculator', title: 'Calculatrice', icon: '🧮', w: 300, h: 400, isFixedSize: true },
 }

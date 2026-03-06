@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useWindowState, useWM } from '@/components/xp/core/WindowManager'
 import { XPTabButton } from '@/components/xp/shared/XPTabButton'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 export function DateTimePropApp({ windowId }: { windowId: string }) {
     const win = useWindowState(windowId)
@@ -147,7 +148,10 @@ export function DateTimePropApp({ windowId }: { windowId: string }) {
                                     <input
                                         type="number"
                                         value={currentYear}
-                                        onChange={(e) => setSelectedDate(new Date(parseInt(e.target.value), currentMonth, 1))}
+                                        onChange={(e) => {
+                                            const y = parseInt(e.target.value)
+                                            setSelectedDate(new Date(y, currentMonth, 1))
+                                        }}
                                         style={{ width: 55, fontSize: 11 }}
                                     />
                                 </div>
@@ -214,7 +218,18 @@ export function DateTimePropApp({ windowId }: { windowId: string }) {
                                         backgroundColor: '#FFF', border: '1px solid #7F9DB9', padding: '4px 12px',
                                         fontSize: 13, fontFamily: 'monospace'
                                     }}>
-                                        <span>{date.getHours().toString().padStart(2, '0')}</span>:
+                                        <input
+                                            type="number"
+                                            value={date.getHours()}
+                                            min={0} max={23}
+                                            onChange={(e) => {
+                                                const h = parseInt(e.target.value)
+                                                const d = new Date(date)
+                                                d.setHours(h)
+                                                setDate(d)
+                                            }}
+                                            style={{ width: 24, fontSize: 13, border: 'none', outline: 'none', background: 'transparent', textAlign: 'right', fontFamily: 'monospace' }}
+                                        />:
                                         <span>{date.getMinutes().toString().padStart(2, '0')}</span>:
                                         <span>{date.getSeconds().toString().padStart(2, '0')}</span>
                                     </div>

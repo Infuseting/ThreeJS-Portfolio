@@ -3,6 +3,7 @@
 import { useWM, useWMState } from '@/components/xp/core/WindowManager'
 import { useVolume, useVolumeState } from '@/components/xp/contexts/VolumeContext'
 import { useState, useEffect, useRef } from 'react'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  Volume Mixer App (Windows XP style)
@@ -62,6 +63,16 @@ export function VolumeMixerApp({ windowId }: { windowId: string }) {
 
     const appEntries = Object.values(volState.apps).filter(a => a.windowId !== windowId)
 
+    // Achievements tracking
+    const volumeChangesRef = useRef(0)
+    const trackVolumeChange = () => {
+        volumeChangesRef.current += 1
+        if (volumeChangesRef.current > 30) {
+            unlockAchievement('audiophile')
+            volumeChangesRef.current = 0
+        }
+    }
+
     return (
         <div ref={containerRef} style={{
             height: '100%',
@@ -94,8 +105,16 @@ export function VolumeMixerApp({ windowId }: { windowId: string }) {
                     icon="🔊"
                     volume={volState.masterVolume}
                     muted={volState.masterMuted}
-                    onVolumeChange={(v) => vol.setMasterVolume(v)}
-                    onToggleMute={() => vol.toggleMasterMute()}
+                    onVolumeChange={(v) => {
+                        vol.setMasterVolume(v)
+                        trackVolumeChange()
+                        if (v === 0) unlockAchievement('silence-radio')
+                    }}
+                    onToggleMute={() => {
+                        vol.toggleMasterMute()
+                        trackVolumeChange()
+                        if (!volState.masterMuted) unlockAchievement('silence-radio')
+                    }}
                     isMaster
                 />
 

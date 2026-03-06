@@ -25,6 +25,7 @@ const MENU_ITEMS: StartMenuEntry[] = [
   { icon: '🎵', label: 'Lofi Radio', appType: 'mediaplayer' },
   { icon: '🎨', label: 'Paint', appType: 'paint' },
   { icon: '🪐', label: 'Pinball', appType: 'pinball' },
+  { icon: '🧮', label: 'Calculatrice', appType: 'calculator' },
   { icon: '📄', label: 'Mon CV', appType: 'cv' },
   { icon: '🏆', label: 'Succès', appType: 'achievements' },
 ]

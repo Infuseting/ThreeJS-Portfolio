@@ -204,6 +204,20 @@ function createClippyStore() {
     let idleTimer: ReturnType<typeof setTimeout> | null = null
     let spamInterval: ReturnType<typeof setInterval> | null = null
 
+    // Tracking for achievements
+    let menuOpenedAt = 0
+    let aliveSince = persisted.isDeleted ? 0 : Date.now()
+    let moveCount = 0
+    let moveResetTimer: ReturnType<typeof setTimeout> | null = null
+    if (typeof window !== 'undefined') {
+        setInterval(() => {
+            if (!state.isDeleted && aliveSince !== 0 && Date.now() - aliveSince >= 10 * 60 * 1000) {
+                unlockAchievement('meilleur-ami')
+                aliveSince = 0 // prevent re-triggering
+            }
+        }, 30000)
+    }
+
     const listeners = new Set<Listener>()
     const notify = () => listeners.forEach((l) => l())
 
@@ -358,6 +372,9 @@ function createClippyStore() {
         // Track rapid clicks
         state = { ...state, rapidClicks: state.rapidClicks + 1 }
         totalInteractions++
+        if (totalInteractions === 10) {
+            unlockAchievement('bavard')
+        }
         savePersistedState(state.tutorialSeen, totalInteractions, state.isHarassed, state.isDeleted, state.x, state.y, allAchievementsSeen)
 
         // Reset rapid click counter after 2s of no clicks
@@ -395,12 +412,14 @@ function createClippyStore() {
 
         if (!reacted) {
             // Normal click → toggle menu
+            const nowOpen = !state.menuOpen
             state = {
                 ...state,
-                menuOpen: !state.menuOpen,
+                menuOpen: nowOpen,
                 speech: null,
                 emotion: 'happy',
             }
+            if (nowOpen) menuOpenedAt = Date.now()
             notify()
         }
 
@@ -475,6 +494,9 @@ function createClippyStore() {
     }
 
     function closeMenu() {
+        if (state.menuOpen && Date.now() - menuOpenedAt < 1000) {
+            unlockAchievement('cleepy-enerve')
+        }
         state = { ...state, menuOpen: false }
         notify()
     }
@@ -482,10 +504,24 @@ function createClippyStore() {
     function moveClippy(x: number, y: number) {
         state = { ...state, x, y }
         savePersistedState(state.tutorialSeen, totalInteractions, state.isHarassed, state.isDeleted, state.x, state.y, allAchievementsSeen)
+
+        // Maltraitance achievement: 20 moves in 30 seconds
+        moveCount++
+        if (moveCount >= 20) {
+            unlockAchievement('maltraitance')
+            moveCount = 0
+        }
+        if (moveResetTimer) clearTimeout(moveResetTimer)
+        moveResetTimer = setTimeout(() => { moveCount = 0 }, 30000)
+
         notify()
     }
 
     function deleteClippy() {
+        if (state.menuOpen && Date.now() - menuOpenedAt < 1000) {
+            unlockAchievement('cleepy-enerve')
+        }
+        aliveSince = 0
         state = { ...state, isDeleted: true, visible: false, menuOpen: false, speech: null }
         if (speechTimer) clearTimeout(speechTimer)
         savePersistedState(state.tutorialSeen, totalInteractions, state.isHarassed, state.isDeleted, state.x, state.y, allAchievementsSeen)
@@ -493,6 +529,7 @@ function createClippyStore() {
     }
 
     function restoreClippy(isFinalAchievement: boolean = false) {
+        aliveSince = Date.now()
         state = { ...state, isDeleted: false, visible: true, emotion: 'happy', speech: { text: "Je suis de retour ! Merci de m'avoir sorti de là-dedans.", type: 'welcome' } }
 
         if (isFinalAchievement) {

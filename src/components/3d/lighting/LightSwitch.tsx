@@ -60,6 +60,9 @@ export function LightSwitch({
     if (streakRef.current >= 10) {
       unlockAchievement('jour-nuit')
     }
+    if (streakRef.current >= 20) {
+      unlockAchievement('coupure-courant')
+    }
   }
 
   const { interactiveRef, isHighlighted } = useInteractable({

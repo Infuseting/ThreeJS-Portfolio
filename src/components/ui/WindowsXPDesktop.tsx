@@ -7,6 +7,7 @@ import {
   useCallback,
 } from 'react'
 import { WMProvider, useWM, useWMState, type XPWindowState } from '@/components/xp/core/WindowManager'
+import { unlockAchievement } from '@/components/stores/AchievementStore'
 import { XPWindow } from '@/components/xp/core/XPWindow'
 import { FileExplorer } from '@/components/xp/apps/navigation/FileExplorer'
 import { InternetExplorer } from '@/components/xp/apps/other/InternetExplorer'
@@ -24,6 +25,7 @@ import { TaskManagerApp } from '@/components/xp/apps/tabbed/TaskManagerApp'
 import { OutlookExpressApp } from '@/components/xp/apps/other/OutlookExpressApp'
 import { ControlPanelApp } from '@/components/xp/apps/tabbed/ControlPanelApp'
 import { GitTrackerApp } from '@/components/xp/apps/navigation/GitTrackerApp'
+import { CalculatorApp } from '@/components/xp/apps/system/CalculatorApp'
 import { DateTimePropApp } from '@/components/xp/apps/system/DateTimePropApp'
 import { RecycleBinApp } from '@/components/xp/apps/system/RecycleBinApp'
 import { VolumeMixerApp } from '@/components/xp/apps/tabbed/VolumeMixerApp'
@@ -126,10 +128,76 @@ function DesktopInner({ width, height, active }: { width: number; height: number
   useClock(setClock)
   useHideNativeCursor(active)
   useVirtualCursorTracking(active, containerRef, width, height, setCursorPos)
+  useKonamiCode(active)
 
   const closeStart = useCallback(() => setStartOpen(false), [])
   const openApp = useOpenApp(closeStart)
   const { turnOff } = useComputerPowerActions()
+
+  // Achievement tracking
+  const clickCountRef = useRef(0)
+  const handleDesktopClick = useCallback(() => {
+    setStartOpen(false)
+    closeContextMenu()
+    clickCountRef.current += 1
+    if (clickCountRef.current === 50) {
+      unlockAchievement('clic-compulsif')
+    }
+  }, [])
+
+  usePatientTimer(active)
+
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+
+  const handleIconContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({ x: e.clientX, y: e.clientY })
+  }
+
+  const closeContextMenu = () => {
+    if (contextMenu) setContextMenu(null)
+  }
+
+  /* ── Selection Box ── */
+  const [selectionBox, setSelectionBox] = useState<{ startX: number, startY: number, curX: number, curY: number } | null>(null)
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    // Only start selection if clicking directly on the desktop or the icons container (not icons themselves)
+    if (target === containerRef.current || target.parentElement === containerRef.current) {
+      const el = containerRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const vx = ((e.clientX - rect.left) / rect.width) * width
+      const vy = ((e.clientY - rect.top) / rect.height) * height
+      setSelectionBox({ startX: vx, startY: vy, curX: vx, curY: vy })
+      target.setPointerCapture(e.pointerId)
+    }
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (selectionBox && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const vx = ((e.clientX - rect.left) / rect.width) * width
+      const vy = ((e.clientY - rect.top) / rect.height) * height
+      setSelectionBox({ ...selectionBox, curX: vx, curY: vy })
+    }
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (selectionBox) {
+      const boxW = Math.abs(selectionBox.curX - selectionBox.startX)
+      const boxH = Math.abs(selectionBox.curY - selectionBox.startY)
+      const screenArea = width * height
+      const boxArea = boxW * boxH
+      if (boxArea > screenArea * 0.7) {
+        unlockAchievement('selectionneur')
+      }
+      setSelectionBox(null)
+      try { (e.target as HTMLElement).releasePointerCapture(e.pointerId) } catch { }
+    }
+  }
 
   /* ── Specialized openers for apps needing custom overrides ── */
   const openIE = useCallback((url?: string) => {
@@ -173,7 +241,11 @@ function DesktopInner({ width, height, active }: { width: number; height: number
   return (
     <div
       ref={containerRef}
-      onClick={() => setStartOpen(false)}
+      onClick={handleDesktopClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       style={{
         width,
         height,
@@ -189,9 +261,24 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         color: '#000',
       }}
     >
+      {/* ─── Selection Box Element ─── */}
+      {selectionBox && (
+        <div style={{
+          position: 'absolute',
+          left: Math.min(selectionBox.startX, selectionBox.curX),
+          top: Math.min(selectionBox.startY, selectionBox.curY),
+          width: Math.abs(selectionBox.curX - selectionBox.startX),
+          height: Math.abs(selectionBox.curY - selectionBox.startY),
+          backgroundColor: 'rgba(49, 106, 197, 0.4)',
+          border: '1px dotted #316AC5',
+          pointerEvents: 'none',
+          zIndex: 5,
+        }} />
+      )}
+
       {/* ─── Desktop icons ─── */}
       <div style={{ padding: 12, display: 'flex', flexDirection: 'column', flexWrap: 'wrap', alignContent: 'flex-start', gap: 10, position: 'absolute', top: 0, left: 0, bottom: TASKBAR_H }}>
-        <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={() => openApp('file-explorer')} />
+        <DesktopIcon label="Poste de travail" icon="💻" onDoubleClick={() => openApp('file-explorer')} onContextMenu={handleIconContextMenu} />
         <DesktopIcon label="Internet Explorer" icon="🌐" onDoubleClick={() => openIE()} />
         <DesktopIcon label="Outlook Express" icon="📧" onDoubleClick={() => openApp('outlook')} />
         <DesktopIcon label="Mon CV" icon="📄" onDoubleClick={() => openApp('cv')} />
@@ -207,9 +294,45 @@ function DesktopInner({ width, height, active }: { width: number; height: number
         <DesktopIcon label="Paint" icon="🎨" onDoubleClick={() => openApp('paint')} />
         <DesktopIcon label="Pinball" icon="🪐" onDoubleClick={() => openApp('pinball')} />
         <DesktopIcon label="Mes documents" icon="📁" onDoubleClick={() => openApp('file-explorer')} />
-        <DesktopIcon id="recycle-bin" label="Corbeille" icon="🗑️" onDoubleClick={() => openApp('recycle-bin')} />
+        <DesktopIcon id="recycle-bin" label="Corbeille" icon="🗑️" onDoubleClick={() => openApp('recycle-bin')} onContextMenu={handleIconContextMenu} />
         <DesktopIcon label="Succès" icon="🏆" onDoubleClick={() => openApp('achievements')} />
       </div>
+
+      {/* ─── Context Menu ─── */}
+      {contextMenu && (
+        <div
+          style={{
+            position: 'absolute',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            background: '#ECE9D8',
+            border: '1px solid #ACA899',
+            borderRightColor: '#716F64',
+            borderBottomColor: '#716F64',
+            boxShadow: '2px 2px 3px rgba(0,0,0,0.2)',
+            zIndex: 10000,
+            padding: 2,
+            minWidth: 120,
+          }}
+        >
+          <div
+            style={{ padding: '3px 18px', cursor: 'pointer' }}
+            onClick={(e) => { e.stopPropagation(); closeContextMenu(); unlockAchievement('anticonformiste') }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#316AC5'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#000'; }}
+          >
+            Renommer
+          </div>
+          <div
+            style={{ padding: '3px 18px', cursor: 'pointer' }}
+            onClick={(e) => { e.stopPropagation(); closeContextMenu(); unlockAchievement('anticonformiste') }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#316AC5'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#000'; }}
+          >
+            Supprimer
+          </div>
+        </div>
+      )}
 
       {/* ─── Windows ─── */}
       {wmState.windows.map((win) => (
@@ -314,6 +437,8 @@ function AppContent({
       return <VolumeMixerApp windowId={win.id} />
     case 'datetime':
       return <DateTimePropApp windowId={win.id} />
+    case 'calculator':
+      return <CalculatorApp windowId={win.id} />
     case 'achievements':
       return <AchievementsApp windowId={win.id} />
     default:
@@ -382,4 +507,61 @@ function useVirtualCursorTracking(
       document.removeEventListener('pointermove', onPointerMove)
     }
   }, [active, width, height, containerRef, setCursorPos])
+}
+
+/** Track Konami code */
+function useKonamiCode(active: boolean) {
+  useEffect(() => {
+    if (!active) return
+
+    const KONAMI_CODE = [
+      'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+      'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+      'b', 'a'
+    ]
+    let konamiIndex = 0
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === KONAMI_CODE[konamiIndex] || e.key.toLowerCase() === KONAMI_CODE[konamiIndex].toLowerCase()) {
+        konamiIndex++
+        if (konamiIndex === KONAMI_CODE.length) {
+          unlockAchievement('konami-code')
+          konamiIndex = 0
+        }
+      } else {
+        konamiIndex = 0
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [active])
+}
+
+/** Track absolute idle time for Patient achievement (5 minutes) */
+function usePatientTimer(active: boolean) {
+  useEffect(() => {
+    if (!active) return
+
+    let idleTimer: ReturnType<typeof setTimeout>
+    const setupTimer = () => {
+      idleTimer = setTimeout(() => {
+        unlockAchievement('patient')
+      }, 5 * 60 * 1000)
+    }
+
+    const resetTimer = () => {
+      clearTimeout(idleTimer)
+      setupTimer()
+    }
+
+    setupTimer()
+    const events = ['mousemove', 'pointermove', 'keydown', 'mousedown']
+    events.forEach(ev => window.addEventListener(ev, resetTimer))
+
+    return () => {
+      clearTimeout(idleTimer)
+      events.forEach(ev => window.removeEventListener(ev, resetTimer))
+    }
+  }, [active])
 }
