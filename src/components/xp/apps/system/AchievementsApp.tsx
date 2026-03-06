@@ -28,6 +28,14 @@ const RARITY_LABELS: Record<AchievementRarity, string> = {
   LEGENDARY: 'Légendaire',
 }
 
+const RARITY_WEIGHT: Record<AchievementRarity, number> = {
+  COMMON: 0,
+  UNCOMMON: 1,
+  RARE: 2,
+  EPIC: 3,
+  LEGENDARY: 4,
+}
+
 export function AchievementsApp({ windowId }: AchievementsAppProps) {
   const { unlocked, unseen } = useAchievements()
 
@@ -50,7 +58,14 @@ export function AchievementsApp({ windowId }: AchievementsAppProps) {
       const bUnlocked = unlocked.has(b.id)
       if (aUnlocked && !bUnlocked) return -1
       if (!aUnlocked && bUnlocked) return 1
-      return a.rarity < b.rarity ? -1 : 1
+
+      const weightA = RARITY_WEIGHT[a.rarity]
+      const weightB = RARITY_WEIGHT[b.rarity]
+      if (weightA !== weightB) {
+        return weightA - weightB
+      }
+
+      return 0
     })
     return sorted
   }, [unlocked])
