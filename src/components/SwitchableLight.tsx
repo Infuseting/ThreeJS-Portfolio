@@ -96,16 +96,35 @@ export function SwitchableLight({
     <group>
       {lightElement}
 
-      {/* Default fixture visual (small emissive sphere) */}
+      {/* Default fixture visual (light bulb and wire hanging from ceiling) */}
       {children ?? (
-        <mesh position={position}>
-          <sphereGeometry args={[0.15, 16, 16]} />
-          <meshStandardMaterial
-            color={isOn ? color : '#333333'}
-            emissive={isOn ? color : '#000000'}
-            emissiveIntensity={isOn ? 1 : 0}
-          />
-        </mesh>
+        <group position={position}>
+          {/* Cable / Wire (extends upwards into the ceiling) */}
+          <mesh position={[0, 2.52, 0]}>
+            <cylinderGeometry args={[0.01, 0.01, 5, 8]} />
+            <meshStandardMaterial color="#111111" roughness={0.9} />
+          </mesh>
+
+          {/* Socket / Base */}
+          <mesh position={[0, 0.1, 0]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.1, 16]} />
+            <meshStandardMaterial color="#222222" roughness={0.7} metalness={0.2} />
+          </mesh>
+
+          {/* Glass Bulb */}
+          <mesh position={[0, 0, 0]}>
+            <sphereGeometry args={[0.07, 32, 32]} />
+            <meshStandardMaterial
+              color={isOn ? color : '#ffffff'}
+              emissive={isOn ? color : '#000000'}
+              emissiveIntensity={isOn ? 2 : 0}
+              transparent={!isOn}
+              opacity={isOn ? 1 : 0.4}
+              roughness={0.1}
+              metalness={0.1}
+            />
+          </mesh>
+        </group>
       )}
     </group>
   )

@@ -42,7 +42,7 @@ export default function Scene() {
 
           <SwitchableLight
             channel="room1"
-            position={[6, 2.90, -3]}
+            position={[6, 2.6, -3]}
             intensity={20}
             color="#ffe4b5"
           />
