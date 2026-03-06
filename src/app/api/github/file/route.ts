@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseGitHubRepo } from '@/utils/parseGitHubRepo'
+import { parseGitHubRepo } from '@/utils/github/parseGitHubRepo'
 
 /* ═══════════════════════════════════════════════
  *  GitHub raw file content proxy
