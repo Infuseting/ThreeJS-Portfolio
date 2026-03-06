@@ -79,6 +79,7 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
   const [entries, setEntries] = useState<FSEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedEntry, setSelectedEntry] = useState<string | null>(null)
 
   const current = breadcrumbs[breadcrumbs.length - 1]
 
@@ -432,6 +433,8 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
                 <FileRow
                   key={`${entry.name}-${i}`}
                   entry={entry}
+                  isSelected={selectedEntry === entry.name}
+                  onSelect={() => setSelectedEntry(entry.name)}
                   onDoubleClick={() => onDoubleClick(entry)}
                   onContextMenu={(e) => onContextMenu(e as ReactMouseEvent, entry)}
                 />
@@ -558,33 +561,34 @@ export function FileExplorer({ windowId, initialPath = '' }: FileExplorerProps) 
 
 function FileRow({
   entry,
+  isSelected,
+  onSelect,
   onDoubleClick,
   onContextMenu,
 }: {
   entry: FSEntry
+  isSelected: boolean
+  onSelect: () => void
   onDoubleClick: () => void
   onContextMenu?: (e: React.MouseEvent) => void
 }) {
-  const [selected, setSelected] = useState(false)
-
   return (
     <tr
-      onClick={() => setSelected(true)}
+      onPointerDown={onSelect}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
-      onBlur={() => setSelected(false)}
       draggable
       onDragStart={(e) => {
+        onSelect()
         // Set the drag payload to be the file name and type so Clippy knows what was dropped
         e.dataTransfer.setData('text/plain', JSON.stringify({ name: entry.name, type: entry.type }))
         e.dataTransfer.effectAllowed = 'copyMove'
       }}
-      tabIndex={0}
       style={{
-        background: selected ? '#316AC5' : 'transparent',
-        color: selected ? '#fff' : '#000',
+        background: isSelected ? '#316AC5' : 'transparent',
+        color: isSelected ? '#fff' : '#000',
         cursor: 'pointer',
-        outline: 'none',
+        userSelect: 'none',
       }}
     >
       <td style={{ padding: '2px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
