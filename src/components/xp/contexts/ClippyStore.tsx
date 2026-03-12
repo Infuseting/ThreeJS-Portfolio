@@ -207,7 +207,9 @@ function createClippyStore() {
     // Tracking for achievements
     let menuOpenedAt = 0
     let aliveSince = persisted.isDeleted ? 0 : Date.now()
-    let moveCount = 0
+    let accumulatedDistance = 0
+    let lastMoveX: number | null = null
+    let lastMoveY: number | null = null
     let moveResetTimer: ReturnType<typeof setTimeout> | null = null
     if (typeof window !== 'undefined') {
         setInterval(() => {
@@ -505,14 +507,25 @@ function createClippyStore() {
         state = { ...state, x, y }
         savePersistedState(state.tutorialSeen, totalInteractions, state.isHarassed, state.isDeleted, state.x, state.y, allAchievementsSeen)
 
-        // Maltraitance achievement: 20 moves in 30 seconds
-        moveCount++
-        if (moveCount >= 20) {
-            unlockAchievement('maltraitance')
-            moveCount = 0
+        if (lastMoveX !== null && lastMoveY !== null) {
+            const dx = x - lastMoveX
+            const dy = y - lastMoveY
+            accumulatedDistance += Math.sqrt(dx * dx + dy * dy)
+            
+            if (accumulatedDistance >= 5000) {
+                unlockAchievement('maltraitance')
+                accumulatedDistance = 0
+            }
         }
+        lastMoveX = x
+        lastMoveY = y
+
         if (moveResetTimer) clearTimeout(moveResetTimer)
-        moveResetTimer = setTimeout(() => { moveCount = 0 }, 30000)
+        moveResetTimer = setTimeout(() => { 
+            accumulatedDistance = 0
+            lastMoveX = null
+            lastMoveY = null
+        }, 1000)
 
         notify()
     }
