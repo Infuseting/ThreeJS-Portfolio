@@ -1,24 +1,32 @@
 'use client'
 
 import * as THREE from 'three'
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls, PointerLockControls } from '@react-three/drei'
 import { RigidBody, CapsuleCollider, useRapier, RapierRigidBody } from '@react-three/rapier'
 import { useComputerFocus, useComputerFocusActions } from '@/components/stores/ComputerFocusStore'
 import { useInfoPanel } from '@/components/stores/InfoPanelStore'
 import { unlockAchievement } from '@/components/stores/AchievementStore'
+import { PlayerModel, PlayerAnimation } from '@/components/3d/models/PlayerModel'
 
 const SPEED = 5.0
+const RUN_SPEED = 8.0
 const direction = new THREE.Vector3()
 const frontVector = new THREE.Vector3()
 const sideVector = new THREE.Vector3()
+const rotationMatrix = new THREE.Matrix4()
+const targetQuaternion = new THREE.Quaternion()
 
 export function Player() {
   const rigidBody = useRef<RapierRigidBody>(null)
   const [, get] = useKeyboardControls()
   const { rapier, world } = useRapier()
   const pointerControlsRef = useRef<any>(null)
+  
+  // Player state
+  const [animation, setAnimation] = useState<PlayerAnimation>('Man_Idle')
+  const [rotationY, setRotationY] = useState(0)
 
   // Computer focus
   const focusState = useComputerFocus()
@@ -29,8 +37,6 @@ export function Player() {
 
   // Audio state
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  // Track time since last footstep
-  const lastFootstepTime = useRef(0)
 
   useEffect(() => {
     // Initialize Audio element
@@ -70,6 +76,10 @@ export function Player() {
     }
   }
 
+  // References for first person camera attachment
+  const headRef = useRef<THREE.Object3D>(null)
+  const headPosition = new THREE.Vector3()
+
   useFrame((state) => {
     if (!rigidBody.current) return
 
@@ -78,6 +88,7 @@ export function Player() {
       const velocity = rigidBody.current.linvel()
       rigidBody.current.setLinvel({ x: 0, y: velocity.y, z: 0 }, true)
       handleFootsteps(false, false)
+      setAnimation(isFocused ? 'Man_Sitting' : 'Man_Idle')
       return
     }
 
@@ -85,11 +96,10 @@ export function Player() {
     const velocity = rigidBody.current.linvel()
     const translation = rigidBody.current.translation()
 
+    // ─── Achievement Tracking ───
     if (!isBlocked && !isFocused) {
-      // Zoom Zoom achievement! (Looking at the computer from 15m+ away)
       const distToComputer = Math.hypot(translation.x - 9, translation.z - (-0.25))
       if (distToComputer > 15) {
-        // Check if the player is looking toward the computer
         const dirToComputer = new THREE.Vector3(9 - translation.x, 0, -0.25 - translation.z).normalize()
         const camDir = new THREE.Vector3()
         state.camera.getWorldDirection(camDir)
@@ -102,14 +112,22 @@ export function Player() {
       }
     }
 
-    // Update camera to match player body position (eyes level)
-    state.camera.position.set(translation.x, translation.y + 0.75, translation.z)
+    // ─── Camera Setup (1st Person) ───
+    if (headRef.current) {
+        headRef.current.getWorldPosition(headPosition)
+        state.camera.position.copy(headPosition)
+        // Offset forward slightly to avoid seeing the inside of the face
+        const viewDir = new THREE.Vector3()
+        state.camera.getWorldDirection(viewDir)
+        state.camera.position.addScaledVector(viewDir, 0.0)
+    } else {
+        state.camera.position.set(translation.x, translation.y + 0.35, translation.z)
+    }
 
-    // Calculate movement direction relative to camera
+    // ─── Movement Calculation ───
     frontVector.set(0, 0, Number(backward) - Number(forward))
     sideVector.set(Number(left) - Number(right), 0, 0)
 
-    // Normalize and apply rotation from camera
     direction
       .subVectors(frontVector, sideVector)
       .normalize()
@@ -119,20 +137,40 @@ export function Player() {
     // Apply movement
     rigidBody.current.setLinvel({ x: direction.x, y: velocity.y, z: direction.z }, true)
 
-    // Jumping & Ground check via raycast
-    // Start ray at the center of the player, cast downwards
+    // ─── Jumping & Ground Check ───
     const rayOrigin = { x: translation.x, y: translation.y, z: translation.z }
     const rayDir = { x: 0, y: -1, z: 0 }
     const ray = new rapier.Ray(rayOrigin, rayDir)
-    const hit = world.castRay(ray, 1.025, true, undefined, undefined, undefined, rigidBody.current as any)
+    const hit = world.castRay(ray, 0.5, true, undefined, undefined, undefined, rigidBody.current as any)
     const isGrounded = hit !== null
 
     if (jump && isGrounded) {
-      rigidBody.current.setLinvel({ x: velocity.x, y: 5, z: velocity.z }, true)
+      rigidBody.current.setLinvel({ x: velocity.x, y: 7, z: velocity.z }, true)
     }
 
-    // Footsteps
-    const isMoving = Math.abs(velocity.x) > 0.5 || Math.abs(velocity.z) > 0.5
+    // ─── Animation & Rotation Logic ───
+    const horizVelocity = Math.hypot(velocity.x, velocity.z)
+    const isMoving = horizVelocity > 0.1 
+
+    let nextAnimation: PlayerAnimation = 'Man_Idle'
+    if (!isGrounded) {
+      nextAnimation = isMoving ? 'Man_RunningJump' : 'Man_Jump'
+    } else if (isMoving) {
+      nextAnimation = horizVelocity > SPEED * 1.2 ? 'Man_Run' : 'Man_Walk'
+    } else {
+      nextAnimation = 'Man_Idle'
+    }
+
+    // Always rotate character to face the camera direction (horizontal only)
+    const camDir = new THREE.Vector3()
+    state.camera.getWorldDirection(camDir)
+    const angle = Math.atan2(camDir.x, camDir.z)
+    setRotationY(angle)
+
+    if (nextAnimation !== animation) {
+      setAnimation(nextAnimation)
+    }
+
     handleFootsteps(isMoving, isGrounded)
 
     // Void Reset
@@ -142,6 +180,17 @@ export function Player() {
     }
   })
 
+  // Keyboard events for actions like Punch or SwordSlash
+  useEffect(() => {
+    const handleMouseDown = () => {
+      if (!isBlocked) {
+        setAnimation('Man_Punch') // Default click action
+      }
+    }
+    window.addEventListener('mousedown', handleMouseDown)
+    return () => window.removeEventListener('mousedown', handleMouseDown)
+  }, [isBlocked])
+
   return (
     <>
       {!isBlocked && <PointerLockControls ref={pointerControlsRef} />}
@@ -150,13 +199,17 @@ export function Player() {
         colliders={false}
         mass={1}
         type="dynamic"
-        position={[1, 1, 0]}
+        position={[2, 0, -2]}
         enabledRotations={[false, false, false]}
       >
-        {/* CapsuleCollider args: [halfHeight, radius]. Total height = 2 * (halfHeight + radius)
-            We want total height = 1.95. If radius = 0.5, then halfHeight = (1.95 - 2*0.5)/2 = 0.475 */}
-        <CapsuleCollider args={[0.475, 0.5]} />
-
+        <CapsuleCollider args={[0.18, 0.25]} />
+        <PlayerModel 
+          animation={animation} 
+          rotationY={rotationY} 
+          position={[0, -0.43, 0]} 
+          headRef={headRef}
+          isSelf={true}
+        />
       </RigidBody>
     </>
   )
