@@ -116,17 +116,65 @@ const PAIN_REACTIONS: { threshold: number; text: string; emotion: ClippyEmotion 
 /* ── Idle Tips ── */
 
 export const IDLE_TIPS = [
-    'Psst ! Tu savais que tu peux jouer au Pinball ? 🎳',
-    "Essaie de taper 'skills' dans l'invite de commandes !",
-    'Regarde les commits GitHub dans Git Tracker ! 🐙',
-    "Tu as essayé de changer le fond d'écran ? Va dans Panneau de configuration ! ⚙️",
-    "Il y a un Démineur si tu veux te détendre... ou te stresser. 💣",
-    "Le Lecteur Windows Media a de la musique lofi pour coder. 🎵",
-    "Tu peux consulter le CV d'Infuseting directement ici ! 📄",
-    "Outlook Express contient des messages intéressants... 📧",
     "Tu as vu qu'il y a un Tetris ? C'est un classique ! 🧱",
     "Essaie de vider la corbeille pour voir ce qui se passe... 🗑️",
 ]
+
+/* ── Achievement Remarks ── */
+
+const ACHIEVEMENT_REMARKS: Record<string, string> = {
+    'first-boot': "Wouah, tu as réussi à allumer le PC ! On commence par le début, j'aime ça.",
+    'recycle-restore': "Rien ne se perd, tout se transforme... même les vieux fichiers de la corbeille.",
+    'force-shutdown': "Ouch ! Ça a dû piquer un peu pour le disque dur, non ?",
+    'tetris-master': "10 000 points ?! Tu devais passer ton temps sur GameBoy toi.",
+    'jour-nuit': "Clic... clac... clic... clac... On s'amuse bien avec cet interrupteur ?",
+    'harceleur': "Tu as enfin débloqué ton titre officiel. Content de toi ?",
+    'resto_clippy': "Merci ! La corbeille, c'est pas très confortable pour un trombone.",
+    'inception': "Utiliser IE pour aller sur mon propre site... C'est méta.",
+    'ecrivain-rate': "Tes mots étaient magnifiques. Dommage qu'ils soient perdus à jamais.",
+    'grand-oeuvre': "Quel talent littéraire ! On attend le prochain roman avec impatience.",
+    'calcul-mental': "Diviser par zéro... Tu veux vraiment casser l'Internet ?",
+    'hackerman': "Attention, on a un hacker professionnel parmi nous ! Tape 'exit' avant de tout casser.",
+    'matrix': "Tu vois la femme en rouge ? Non ? C'est normal, c'est juste du texte vert.",
+    'identity-crisis': "Qui es-tu ? Où vas-tu ? Tant de questions, si peu de RAM.",
+    'ping-pong': "Pong ! Réflexes de Jedi.",
+    'multitache': "Tant de fenêtres... Ton cerveau est aussi encombré que ton bureau ?",
+    'bordelique': "C'est le chaos total ici ! Tu arrives encore à retrouver ton curseur ?",
+    'curieux': "Fais attention aux fichiers .sys, ils sont timides.",
+    'cachotier': "Tu cherches quoi ? Des secrets ? Je ne dirai rien.",
+    'start-stop': "Le menu Démarrer est très joli, mais il y a d'autres choses à voir !",
+    'konami-code': "Un classique indémodable. Ça ne donne pas des vies infinies ici, par contre.",
+    'silence-radio': "Ah... le silence. C'est reposant, tu ne trouves pas ?",
+    'audiophile': "Fais attention aux oreilles, le son du modem peut être violent.",
+    'bavard': "On papote, on papote... j'aime bien avoir un peu de compagnie.",
+    '404-not-found': "Perdu dans le cyberespace ? C'est une impasse.",
+    'archiviste': "Tu collectionnes les dossiers ? C'est une passion originale.",
+    'nettoyeur-compulsif': "C'est propre, je te jure. Il n'y avait plus rien.",
+    'indecis': "Un coup grand, un coup petit... Faut choisir dans la vie !",
+    'cache-cache': "Coucou ! Je te vois encore, tu sais.",
+    'clic-compulsif': "Le bureau n'a rien fait de mal, promis.",
+    'drag-drop-master': "C'est une belle balade pour cette petite fenêtre.",
+    'perdu': "A peine ouvert, déjà fermé ? Tu as changé d'avis ?",
+    'trop-lourd': "Paint ET Pinball ? On joue dans la cour des grands, là.",
+    'google-box': "Chercher Google sur Google via IE... La boucle est bouclée.",
+    'anticonformiste': "On ne touche pas aux fondations ! C'est sacré.",
+    'selectionneur': "Belle prise ! Tu as presque tout attrapé.",
+    'maniaque': "L'ordre et la discipline, c'est important pour un système stable.",
+    'changement-avis': "L'erreur est humaine, même pour un utilisateur.",
+    'boomer': "Prends ton temps... Le hardware de 2001 n'est pas pressé non plus.",
+    'zoom-zoom': "De loin, tout semble plus petit, n'est-ce pas ?",
+    'patient': "Zen, restons zen... 5 minutes de calme, ça fait du bien.",
+    'rage-quit': "Calme-toi sur la souris, elle n'y est pour rien !",
+    'cleepy-enerve': "Hé ! Je parlais, là ! C'est impoli.",
+    'meilleur-ami': "10 minutes ensemble... C'est le début d'une grande amitié.",
+    'speedrunner': "A cette vitesse, tu vas finir le portfolio avant d'avoir vu les projets !",
+    'barre-saturee': "La barre des tâches appelle à l'aide. Trop de fenêtres !",
+    'maltraitance': "Arrête !! J'ai le tournis là... Beurk...",
+    'coupure-courant': "Et voilà, on a tout fait sauter. Bravo l'électricien !",
+    'nostalgique': "Ce nouveau fond d'écran te va à ravir.",
+    'hardware-master': "Tu cherches où est branché le disque dur ? C'est virtuel, mon ami.",
+    'troll-internet': "Les pop-ups ne passeront pas par toi ! Un vrai rempart numérique.",
+}
 
 /* ── Context Menu Items ── */
 
@@ -609,6 +657,29 @@ function createClippyStore() {
         }, 8000)
     }
 
+    function sayAchievementUnlocked(id: string, title: string) {
+        if (state.isDeleted || state.speech?.type === 'tutorial') return
+
+        if (speechTimer) clearTimeout(speechTimer)
+
+        const remark = ACHIEVEMENT_REMARKS[id] || `Wouah ! Tu as débloqué un nouveau succès : ${title} ! Félicitations ! 🎉`
+        
+        state = {
+            ...state,
+            speech: { text: remark, type: 'tip' },
+            emotion: (id === 'maltraitance' || id === 'harceleur' || state.isHarassed) ? 'hurt' : 'happy',
+            menuOpen: false,
+        }
+
+        notify()
+
+        speechTimer = setTimeout(() => {
+            state = { ...state, speech: null, emotion: state.isHarassed ? 'hurt' : 'idle' }
+            notify()
+            resetIdleTimer()
+        }, 6000)
+    }
+
     return {
         get: () => state,
         subscribe: (listener: Listener) => {
@@ -631,6 +702,7 @@ function createClippyStore() {
         restoreClippy,
         cureClippy,
         sayAllAchievementsUnlocked,
+        sayAchievementUnlocked,
     }
 }
 
@@ -662,3 +734,4 @@ export const deleteClippy = () => clippyStore.deleteClippy()
 export const restoreClippy = (isFinalAchievement?: boolean) => clippyStore.restoreClippy(isFinalAchievement)
 export const cureClippy = () => clippyStore.cureClippy()
 export const clippySayAllAchievementsUnlocked = () => clippyStore.sayAllAchievementsUnlocked()
+export const clippySayAchievementUnlocked = (id: string, title: string) => clippyStore.sayAchievementUnlocked(id, title)

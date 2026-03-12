@@ -1,6 +1,7 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
+import { clippySayAchievementUnlocked } from '@/components/xp/contexts/ClippyStore'
 
 /* ═══════════════════════════════════════════════
  *  Achievement Store
@@ -471,6 +472,9 @@ function createAchievementStore() {
 
       state = { unlocked: newUnlocked, unseen: newUnseen, toast: def }
       notify()
+
+      // Trigger Cleepy reaction
+      clippySayAchievementUnlocked(def.id, def.title)
 
       // Auto-dismiss toast after 4s
       toastTimeout = setTimeout(() => {

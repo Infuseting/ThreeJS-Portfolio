@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useWM } from '@/components/xp/core/WindowManager'
-import { unlockAchievement } from '@/components/stores/AchievementStore'
 
 /* ═══════════════════════════════════════════════
  *  Internet Explorer  (Windows XP style)
@@ -124,9 +123,6 @@ export function InternetExplorer({ windowId, initialUrl }: InternetExplorerProps
   const [activeTabId, setActiveTabId] = useState('tab-1')
   const [addressValue, setAddressValue] = useState(initialUrl || 'https://www.google.com/')
   const tabCounter = useRef(1)
-  const [popups, setPopups] = useState<{ id: number; x: number; y: number; text: string }[]>([])
-  const popupIdRef = useRef(0)
-  const popupsClosedRef = useRef(0)
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
 
@@ -148,14 +144,6 @@ export function InternetExplorer({ windowId, initialUrl }: InternetExplorerProps
     let finalUrl = url.trim()
     if (!finalUrl) return
 
-    if (/^[\w]+$/.test(finalUrl)) {
-      unlockAchievement('404-not-found')
-    }
-
-    if (finalUrl.toLowerCase() === 'google') {
-      unlockAchievement('google-box')
-    }
-
     // If it looks like a URL (has a dot or starts with http), treat as URL
     if (/^https?:\/\//i.test(finalUrl)) {
       // already valid
@@ -168,16 +156,10 @@ export function InternetExplorer({ windowId, initialUrl }: InternetExplorerProps
     }
 
     try {
-      const parsedUrl = new URL(finalUrl)
-      if (parsedUrl.hostname === 'infuseting.fr' || parsedUrl.hostname === 'www.infuseting.fr') {
-        unlockAchievement('inception')
-      }
+      new URL(finalUrl)
     } catch {
       // Ignorer les erreurs de parsing d'URL
     }
-
-    // Spawn troll popups randomly
-    spawnPopups()
 
     setTabs((prev) =>
       prev.map((t) => {
@@ -228,41 +210,6 @@ export function InternetExplorer({ windowId, initialUrl }: InternetExplorerProps
     },
     [addressValue, navigate],
   )
-
-  const POPUP_TEXTS = [
-    '⚠️ Votre PC est infecté ! Cliquez ici pour scanner GRATUITEMENT !',
-    '🎉 Félicitations ! Vous êtes le 1 000 000ème visiteur ! Réclamez votre prix !',
-    '🔒 Attention ! Votre antivirus a expiré ! Mettez à jour MAINTENANT !',
-    '💰 Gagnez 500€ en cliquant ici ! Offre limitée !',
-    '💊 Dr. Internet recommande ce remède miracle !',
-    '🎰 Vous avez gagné un iPhone 3G ! Entrez vos coordonnées !',
-    '⚠️ Windows a détecté 37 erreurs critiques ! Réparer maintenant ?',
-  ]
-
-  const spawnPopups = useCallback(() => {
-    // 30% chance to spawn popups on each navigation
-    if (Math.random() > 0.3) return
-
-    const count = Math.floor(Math.random() * 3) + 1
-    const newPopups = Array.from({ length: count }, () => {
-      popupIdRef.current++
-      return {
-        id: popupIdRef.current,
-        x: Math.random() * 300 + 20,
-        y: Math.random() * 200 + 20,
-        text: POPUP_TEXTS[Math.floor(Math.random() * POPUP_TEXTS.length)],
-      }
-    })
-    setPopups(prev => [...prev, ...newPopups])
-  }, [])
-
-  const closePopup = useCallback((id: number) => {
-    setPopups(prev => prev.filter(p => p.id !== id))
-    popupsClosedRef.current++
-    if (popupsClosedRef.current >= 5) {
-      unlockAchievement('troll-internet')
-    }
-  }, [])
 
   /* ── Observe iframe URL changes ── */
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
@@ -481,40 +428,6 @@ export function InternetExplorer({ windowId, initialUrl }: InternetExplorerProps
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           />
         ) : null}
-
-        {/* ── Troll Popups ── */}
-        {popups.map(popup => (
-          <div key={popup.id} style={{
-            position: 'absolute',
-            left: popup.x, top: popup.y,
-            width: 280,
-            background: '#ECE9D8',
-            border: '2px solid #0054E3',
-            borderRadius: '4px 4px 0 0',
-            boxShadow: '2px 2px 8px rgba(0,0,0,0.3)',
-            zIndex: 100,
-            fontFamily: 'Tahoma, sans-serif',
-            fontSize: 12,
-          }}>
-            <div style={{
-              background: 'linear-gradient(180deg, #0A246A 0%, #3A6EA5 8%, #3A6EA5 92%, #0A246A 100%)',
-              padding: '2px 6px',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              color: '#fff', fontSize: 12, fontWeight: 'bold',
-            }}>
-              <span>⚠️ Alerte</span>
-              <button onClick={() => closePopup(popup.id)} style={{
-                background: 'linear-gradient(180deg, #E06050, #C03020)',
-                border: '1px solid rgba(0,0,0,0.3)', borderRadius: 3,
-                color: '#fff', cursor: 'pointer', padding: '0 4px', fontSize: 11,
-                width: 20, height: 18,
-              }}>✕</button>
-            </div>
-            <div style={{ padding: '12px 10px', textAlign: 'center', lineHeight: 1.4 }}>
-              {popup.text}
-            </div>
-          </div>
-        ))}
       </div>
 
       {/* ── Status bar ── */}
