@@ -21,6 +21,7 @@ interface PlayerModelProps {
     animation: PlayerAnimation
     rotationY?: number
     position?: [number, number, number]
+    scale?: number
     headRef?: React.RefObject<THREE.Object3D | null>
     isSelf?: boolean
 }
@@ -29,7 +30,7 @@ interface PlayerModelProps {
  * PlayerModel component that loads the 'player.glb' model
  * and handles its animations based on state.
  */
-export function PlayerModel({ animation, rotationY = 0, position = [0, -0.95, 0], headRef, isSelf }: PlayerModelProps) {
+export function PlayerModel({ animation, rotationY = 0, position = [0, -0.95, 0], scale = 0.75, headRef, isSelf }: PlayerModelProps) {
     const group = useRef<THREE.Group>(null)
     const { scene, animations } = useGLTF('/model/character/player.glb')
     const { actions, names } = useAnimations(animations, group)
@@ -119,7 +120,7 @@ export function PlayerModel({ animation, rotationY = 0, position = [0, -0.95, 0]
     }, [scene, isSelf])
 
     return (
-        <group ref={group} position={position} scale={0.41} dispose={null}>
+        <group ref={group} position={position} scale={scale} dispose={null}>
             <primitive object={scene} />
         </group>
     )

@@ -9,6 +9,7 @@ import { useComputerPower } from '@/components/stores/ComputerPowerStore'
 import { useInteractable } from '@/hooks/3d/useInteractable'
 import { unlockAchievement } from '@/components/stores/AchievementStore'
 import { WindowsXPDesktop } from '@/components/ui/WindowsXPDesktop'
+import { Furniture } from '@/components/3d/scene/Furniture'
 import {
   Desk3D,
   Tower3D,
@@ -135,15 +136,15 @@ export function Computer({
   const monitorY = DESK_H + 0.025 + BEZEL_H / 2 + 0.12
 
   return (
-    <group position={position} rotation={rotation}>
+    <group position={position} rotation={rotation} scale={0.8}>
       <group ref={interactiveRef}>
-        <Desk3D width={DESK_W} depth={DESK_D} height={DESK_H} legRadius={LEG_R} highlight={highlight} />
+       
         <Tower3D position={[DESK_W / 2 - 0.2, 0.25, 0]} highlight={highlight} />
 
         <Monitor3D
           screenGroupRef={screenGroupRef}
           screenMeshRef={screenMeshRef}
-          position={[0, monitorY, -DESK_D / 2 + 0.14]}
+          position={[0, DESK_H - 0.05, 0]}
           monitorW={MONITOR_W}
           monitorH={MONITOR_H}
           bezelW={BEZEL_W}
@@ -154,8 +155,8 @@ export function Computer({
           <ScreenGlow on={screenOn} />
         </Monitor3D>
 
-        <Keyboard3D position={[0, DESK_H + 0.035, 0.08]} size={[0.4, 0.015, 0.15]} highlight={highlight} />
-        <Mouse3D position={[0.28, DESK_H + 0.03, 0.08]} size={[0.06, 0.02, 0.1]} highlight={highlight} />
+        <Keyboard3D position={[0, DESK_H - 0.26  , 0.15]} size={[0.4, 0.015, 0.15]} highlight={highlight} />
+        <Mouse3D position={[0.30, DESK_H - 0.26, 0.15]} size={[0.06, 0.02, 0.1]} highlight={highlight} />
       </group>
     </group>
   )

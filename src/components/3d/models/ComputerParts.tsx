@@ -81,7 +81,7 @@ export function Tower3D({ position, highlight }: Tower3DProps) {
 
   // Offset power button slightly on the Z and Y axis from the tower center
   const buttonPos: [number, number, number] = [
-    position[0] + 0.1,
+    position[0] + 0.02,
     position[1] + 0.1,
     position[2] + 0.226,
   ]
@@ -104,12 +104,10 @@ export function Tower3D({ position, highlight }: Tower3DProps) {
   return (
     <group>
       <mesh castShadow receiveShadow position={position}>
-        <boxGeometry args={[0.2, 0.5, 0.45]} />
+        <boxGeometry args={[0.15, 0.40, 0.45]} />
         <meshStandardMaterial color="#d0d0d0" {...highlight} />
       </mesh>
 
-      {/* Power LED / Button */}
-      {/* We add an invisible larger hitbox for easier raycasting */}
       <group position={buttonPos} ref={interactiveRef as any}>
         <mesh>
           <circleGeometry args={[0.015, 16]} />
@@ -157,31 +155,7 @@ export function Monitor3D({
 }: Monitor3DProps) {
   return (
     <group ref={screenGroupRef} position={position}>
-      {/* Bezel */}
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[bezelW, bezelH, 0.04]} />
-        <meshStandardMaterial color="#222" {...highlight} />
-      </mesh>
-
-      {/* Screen surface */}
-      <mesh ref={screenMeshRef} position={[0, 0, 0.021]}>
-        <planeGeometry args={[monitorW, monitorH]} />
-        <meshStandardMaterial color="#000" emissive="#112244" emissiveIntensity={0.3} />
-      </mesh>
-
-      {/* Html overlay slot */}
       {children}
-
-      {/* Stand */}
-      <mesh castShadow position={[0, -bezelH / 2 - 0.06, -0.02]}>
-        <boxGeometry args={[0.08, 0.24, 0.08]} />
-        <meshStandardMaterial color="#333" />
-      </mesh>
-      {/* Stand base */}
-      <mesh castShadow receiveShadow position={[0, -bezelH / 2 - 0.18, 0]}>
-        <boxGeometry args={[0.3, 0.02, 0.2]} />
-        <meshStandardMaterial color="#333" />
-      </mesh>
     </group>
   )
 }

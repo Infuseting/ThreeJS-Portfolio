@@ -10,8 +10,9 @@ import { useInfoPanel } from '@/components/stores/InfoPanelStore'
 import { unlockAchievement } from '@/components/stores/AchievementStore'
 import { PlayerModel, PlayerAnimation } from '@/components/3d/models/PlayerModel'
 
-const SPEED = 5.0
-const RUN_SPEED = 8.0
+const SPEED = 2
+const RUN_SPEED = 1.6
+const FIRST_PERSON_HEAD_Y_OFFSET = -0.12
 const direction = new THREE.Vector3()
 const frontVector = new THREE.Vector3()
 const sideVector = new THREE.Vector3()
@@ -76,7 +77,6 @@ export function Player() {
     }
   }
 
-  // References for first person camera attachment
   const headRef = useRef<THREE.Object3D>(null)
   const headPosition = new THREE.Vector3()
 
@@ -116,6 +116,7 @@ export function Player() {
     if (headRef.current) {
         headRef.current.getWorldPosition(headPosition)
         state.camera.position.copy(headPosition)
+      state.camera.position.y += FIRST_PERSON_HEAD_Y_OFFSET
         // Offset forward slightly to avoid seeing the inside of the face
         const viewDir = new THREE.Vector3()
         state.camera.getWorldDirection(viewDir)
@@ -138,11 +139,11 @@ export function Player() {
     rigidBody.current.setLinvel({ x: direction.x, y: velocity.y, z: direction.z }, true)
 
     // ─── Jumping & Ground Check ───
-    const rayOrigin = { x: translation.x, y: translation.y, z: translation.z }
+    const rayOrigin = { x: translation.x, y: translation.y + 0.05, z: translation.z }
     const rayDir = { x: 0, y: -1, z: 0 }
     const ray = new rapier.Ray(rayOrigin, rayDir)
-    const hit = world.castRay(ray, 0.5, true, undefined, undefined, undefined, rigidBody.current as any)
-    const isGrounded = hit !== null
+    const hit = world.castRay(ray, 0.75, true, undefined, undefined, undefined, rigidBody.current as any)
+    const isGrounded = hit !== null && hit.timeOfImpact <= 0.55
 
     if (jump && isGrounded) {
       rigidBody.current.setLinvel({ x: velocity.x, y: 7, z: velocity.z }, true)
@@ -175,7 +176,7 @@ export function Player() {
 
     // Void Reset
     if (translation.y < -10) {
-      rigidBody.current.setTranslation({ x: 1, y: 1, z: 0 }, true)
+      rigidBody.current.setTranslation({ x: 2, y: 1, z: -2 }, true)
       rigidBody.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
     }
   })
@@ -199,14 +200,15 @@ export function Player() {
         colliders={false}
         mass={1}
         type="dynamic"
-        position={[2, 0, -2]}
+        position={[2, 1, -2]}
         enabledRotations={[false, false, false]}
       >
-        <CapsuleCollider args={[0.18, 0.25]} />
+        <CapsuleCollider args={[0.16, 0.20]} />
         <PlayerModel 
           animation={animation} 
           rotationY={rotationY} 
-          position={[0, -0.43, 0]} 
+          position={[0, 0, 0]} 
+          scale={0.085}
           headRef={headRef}
           isSelf={true}
         />

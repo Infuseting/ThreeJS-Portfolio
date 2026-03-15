@@ -2,8 +2,10 @@
 
 import * as THREE from 'three'
 import { useRef, useState, useCallback, type ReactNode } from 'react'
+import type { ThreeElements } from '@react-three/fiber'
 import { useFrame } from '@react-three/fiber'
 import { RigidBody, CuboidCollider, type RapierRigidBody } from '@react-three/rapier'
+import { GLTFModel } from '@/components/3d/models/GLTFModel'
 import { useInteractable } from '@/hooks/3d/useInteractable'
 
 interface DoorProps {
@@ -12,6 +14,14 @@ interface DoorProps {
   width?: number
   height?: number
   depth?: number
+  withFrame?: boolean
+  url?: string
+  /** Optional local transform for the GLTF door model (inside the hinged panel group). */
+  modelPosition?: ThreeElements['group']['position']
+  modelRotation?: ThreeElements['group']['rotation']
+  modelScale?: ThreeElements['group']['scale']
+  modelCastShadow?: boolean
+  modelReceiveShadow?: boolean
   color?: string
   openAngle?: number
   speed?: number
@@ -32,6 +42,13 @@ export function Door({
   width = 1.2,
   height = 2.4,
   depth = 0.1,
+  withFrame = true,
+  url,
+  modelPosition,
+  modelRotation,
+  modelScale,
+  modelCastShadow = true,
+  modelReceiveShadow = true,
   color = '#8B5A2B',
   openAngle = 90,
   speed = 3,
@@ -67,6 +84,7 @@ export function Door({
   })
 
   const targetAngle = isOpen ? THREE.MathUtils.degToRad(openAngle) : 0
+  
 
   // Temp objects to avoid GC pressure
   const _worldPos = useRef(new THREE.Vector3())
@@ -94,7 +112,16 @@ export function Door({
     <group position={position} rotation={rotation}>
       <group ref={pivotRef}>
         <group ref={interactiveRef} position={[width / 2, height / 2, 0]}>
-          {children ?? (
+          {children ?? (url ? (
+            <GLTFModel
+              url={url}
+              position={modelPosition}
+              rotation={modelRotation}
+              scale={modelScale}
+              castShadow={modelCastShadow}
+              receiveShadow={modelReceiveShadow}
+            />
+          ) : (
             <mesh castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
               <meshStandardMaterial
@@ -103,7 +130,7 @@ export function Door({
                 emissiveIntensity={isHighlighted ? 0.15 : 0}
               />
             </mesh>
-          )}
+          ))}
         </group>
 
         {/* Invisible anchor that follows the pivot rotation (used to read world transform) */}
@@ -114,11 +141,12 @@ export function Door({
       <RigidBody ref={doorColliderRef} type="kinematicPosition" colliders={false}>
         <CuboidCollider
           args={[width / 2, height / 2, depth / 2]}
+          sensor={isOpen}
         />
       </RigidBody>
 
       {/* Door frame */}
-      <DoorFrame width={width} height={height} depth={depth} />
+      {withFrame && <DoorFrame width={width} height={height} depth={depth} />}
     </group>
   )
 }
