@@ -8,7 +8,7 @@ import { useInteractionTarget } from '@/components/stores/InteractionStore'
 import { useComputerFocus } from '@/components/stores/ComputerFocusStore'
 
 /** Default interaction distance shared across all interactable objects. */
-export const INTERACT_DISTANCE = 3
+export const INTERACT_DISTANCE = 2
 
 interface UseInteractableOptions {
   /** World position of the object (used for distance check). */

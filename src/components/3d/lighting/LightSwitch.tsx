@@ -10,6 +10,8 @@ interface LightSwitchProps {
   channels: string | string[]
   position?: [number, number, number]
   rotation?: [number, number, number]
+  /** World scale for the switch (x, y, z) */
+  scale?: [number, number, number]
   size?: [number, number, number]
   color?: string
   children?: ReactNode
@@ -25,6 +27,7 @@ export function LightSwitch({
   channels,
   position = [0, 1.2, 0],
   rotation = [0, 0, 0],
+  scale = [1, 1, 1],
   size = [0.15, 0.25, 0.05],
   color = '#e0e0e0',
   children,
@@ -73,7 +76,7 @@ export function LightSwitch({
   })
 
   return (
-    <group position={position} rotation={rotation}>
+    <group position={position} rotation={rotation} scale={scale}>
       <group ref={interactiveRef}>
         {children ?? (
           <group>

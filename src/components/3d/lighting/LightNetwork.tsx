@@ -5,7 +5,7 @@ import React, {
   useContext,
   useCallback,
   useSyncExternalStore,
-  useRef,
+  useState,
 } from 'react'
 
 /* ─────────────────────────────────────────────
@@ -52,25 +52,38 @@ function createLightStore(defaults?: Record<string, boolean>): LightStore {
 
 const LightStoreContext = createContext<LightStore | null>(null)
 
+// Config context to control display options for light fixtures (e.g. hide 3D fixtures)
+const LightConfigContext = createContext<{ showFixtures: boolean } | null>(null)
+
 /** Wrap your scene (or part of it) with this provider to enable the light / switch network. */
 export function LightNetworkProvider({
   defaults,
+  showFixtures = true,
   children,
 }: {
   /** Optionally set initial on/off values per channel, e.g. `{ hallway: false }` */
   defaults?: Record<string, boolean>
+  /** Whether to render 3D fixtures (bulbs, cables) by default inside SwitchableLight */
+  showFixtures?: boolean
   children: React.ReactNode
 }) {
-  // Create store once
-  const storeRef = useRef<LightStore | null>(null)
-  if (!storeRef.current) {
-    storeRef.current = createLightStore(defaults)
-  }
+  // Create store once using useState initializer to avoid ref access during render
+  const [store] = useState<LightStore>(() => createLightStore(defaults))
+
   return (
-    <LightStoreContext.Provider value={storeRef.current}>
-      {children}
+    <LightStoreContext.Provider value={store}>
+      <LightConfigContext.Provider value={{ showFixtures }}>
+        {children}
+      </LightConfigContext.Provider>
     </LightStoreContext.Provider>
   )
+}
+
+/** Hook – read light system configuration (e.g. showFixtures) */
+export function useLightConfig() {
+  const cfg = useContext(LightConfigContext)
+  if (!cfg) throw new Error('useLightConfig must be used inside <LightNetworkProvider>')
+  return cfg
 }
 
 /** Hook – read the on/off value for a given channel (reactive). */

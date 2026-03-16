@@ -204,14 +204,37 @@ export function Player() {
         enabledRotations={[false, false, false]}
       >
         <CapsuleCollider args={[0.16, 0.20]} />
-        <PlayerModel 
-          animation={animation} 
-          rotationY={rotationY} 
-          position={[0, 0, 0]} 
-          scale={0.085}
-          headRef={headRef}
-          isSelf={true}
-        />
+        {/*
+          The PlayerModel was authored with a default scale/offset.
+          To keep the feet aligned with the physics capsule when changing scale,
+          compute a Y offset proportional to the scale applied here.
+        */}
+        {(() => {
+          // Increase the visual model scale to make the player larger
+          const modelScale = 0.16
+
+          // Align the visual model's feet with the Rapier capsule collider bottom
+          // CapsuleCollider args = [radius, height]
+          const capsuleRadius = 0.16
+          const capsuleHeight = 0.20
+          const capsuleHalf = capsuleHeight / 2 + capsuleRadius
+          // The bottom of the capsule (relative to its center) is -capsuleHalf.
+          // Position the model so its feet sit approximately at that Y.
+          // A small tweak (fudge) can be applied if needed.
+          const fudge = 0.015
+          const modelPositionY = -capsuleHalf + fudge
+
+          return (
+            <PlayerModel
+              animation={animation}
+              rotationY={rotationY}
+              position={[0, modelPositionY, 0]}
+              scale={modelScale}
+              headRef={headRef}
+              isSelf={true}
+            />
+          )
+        })()}
       </RigidBody>
     </>
   )

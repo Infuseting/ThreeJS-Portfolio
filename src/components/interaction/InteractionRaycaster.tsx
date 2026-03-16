@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useInteractionStore } from '@/components/stores/InteractionStore'
 
-const INTERACT_DISTANCE = 3
+const INTERACT_DISTANCE = 1
 const raycaster = new THREE.Raycaster()
 const center = new THREE.Vector2(0, 0) // screen centre
 

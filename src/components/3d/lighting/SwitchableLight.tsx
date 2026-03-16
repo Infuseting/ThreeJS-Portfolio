@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { useLightChannel } from '@/components/3d/lighting/LightNetwork'
+import { useLightChannel, useLightConfig } from '@/components/3d/lighting/LightNetwork'
 
 /* ─────────────────────────────────────────────
  *  SwitchableLight
@@ -37,6 +37,8 @@ interface SwitchableLightProps {
   penumbra?: number
   /** Optional children to visually represent the light fixture */
   children?: ReactNode
+  /** If false, do not render the default 3D fixture (bulb, cable). Falls back to provider config when undefined. */
+  showFixture?: boolean
 }
 
 export function SwitchableLight({
@@ -51,9 +53,12 @@ export function SwitchableLight({
   angle = Math.PI / 4,
   penumbra = 0.5,
   children,
+  showFixture,
 }: SwitchableLightProps) {
   const isOn = useLightChannel(channel)
   const currentIntensity = isOn ? intensity : offIntensity
+  const { showFixtures: providerShowFixtures } = useLightConfig()
+  const showFixtureFinal = showFixture ?? providerShowFixtures
 
   const lightElement = (() => {
     switch (type) {
@@ -96,8 +101,8 @@ export function SwitchableLight({
     <group>
       {lightElement}
 
-      {/* Default fixture visual (light bulb and wire hanging from ceiling) */}
-      {children ?? (
+      {/* Render fixture visuals only when enabled (provider or prop) */}
+      {showFixtureFinal ? (children ?? (
         <group position={position}>
           {/* Cable / Wire (extends upwards into the ceiling) */}
           <mesh position={[0, 2.52, 0]}>
@@ -125,7 +130,7 @@ export function SwitchableLight({
             />
           </mesh>
         </group>
-      )}
+      )) : null}
     </group>
   )
 }
