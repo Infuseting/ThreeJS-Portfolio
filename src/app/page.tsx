@@ -9,6 +9,7 @@ import { Crosshair } from '@/components/interaction/Crosshair'
 import { AchievementToast } from '@/components/xp/contexts/AchievementToast'
 import { InfoPanel } from '@/components/ui/InfoPanel'
 import { showInfoPanel, hideInfoPanel } from '@/components/stores/InfoPanelStore'
+import { KeybindHint } from '@/components/ui/KeybindHint'
 import { KeyboardControls, KeyboardControlsEntry } from '@react-three/drei'
 import { useMemo, useEffect } from 'react'
 
@@ -68,7 +69,18 @@ export default function Home() {
           {
             sections: [
               { type: 'title', text: 'Contrôles', gradient: 'linear-gradient(135deg, #fff 0%, #fbbf24 50%, #f97316 100%)' },
-              { type: 'text', content: '🕹️ ZQSD — Se déplacer\n🖱️ Souris — Regarder\n🔑 E — Interagir\n🚀 Espace — Sauter\n⎋ Echap — Quitter le PC' },
+              { 
+                type: 'custom', 
+                render: () => (
+                  <div className="flex flex-col gap-2.5 mb-2 mt-1">
+                    <KeybindHint keys={['Z', 'Q', 'S', 'D']} layout="horizontal" label="Se déplacer" size={22} />
+                    <KeybindHint keys="MouseMove" label="Regarder" size={22} />
+                    <KeybindHint keys="E" label="Interagir" size={22} />
+                    <KeybindHint keys="Space" label="Sauter" size={22} />
+                    <KeybindHint keys="Escape" label="Quitter le PC" size={22} />
+                  </div>
+                )
+              },
               { type: 'divider' },
               { type: 'title', text: 'Liens', gradient: 'linear-gradient(135deg, #fff 0%, #a78bfa 50%, #7c3aed 100%)' },
               {

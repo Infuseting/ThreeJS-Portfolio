@@ -282,38 +282,4 @@ function ScreenGlow({ on }: { on: boolean }) {
       <object3D ref={targetRef} position={[0, 0, 0.2]} />
     </>
   )
-}
-
-
-
-interface Monitor3DProps {
-  /** Ref forwarded to the screen group */
-  screenGroupRef: React.RefObject<THREE.Group | null>
-  /** Ref forwarded to the screen mesh (for world-position computation) */
-  screenMeshRef: React.RefObject<THREE.Mesh | null>
-  position: [number, number, number]
-  monitorW: number
-  monitorH: number
-  bezelW: number
-  bezelH: number
-  highlight: HighlightProps
-  children?: ReactNode
-}
-
-export function Monitor3D({
-  screenGroupRef,
-  screenMeshRef,
-  position,
-  monitorW,
-  monitorH,
-  bezelW,
-  bezelH,
-  highlight,
-  children,
-}: Monitor3DProps) {
-  return (
-    <group ref={screenGroupRef} position={position}>
-      {children}
-    </group>
-  )
-}
+}
