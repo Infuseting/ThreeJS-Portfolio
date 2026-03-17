@@ -2,6 +2,7 @@
 
 import Scene from '@/components/3d/scene/Scene'
 import { InteractionProvider } from '@/components/stores/InteractionStore'
+import { useComputerFocus } from '@/components/stores/ComputerFocusStore'
 import { ComputerFocusProvider } from '@/components/stores/ComputerFocusStore'
 import { InteractionHUD } from '@/components/interaction/InteractionHUD'
 import { InstructionPanel } from '@/components/ui/InstructionPanel'
@@ -100,6 +101,8 @@ export default function Home() {
     return () => clearTimeout(timer)
   }, [])
 
+  const { focused } = useComputerFocus()
+
   return (
     <KeyboardControls map={map}>
       <InteractionProvider>
@@ -108,7 +111,7 @@ export default function Home() {
             <Scene />
 
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2 }}>
-              <InstructionPanel />
+              {!focused && <InstructionPanel />}
               <Crosshair />
               <InteractionHUD />
               <AchievementToast />
