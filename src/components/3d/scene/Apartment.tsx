@@ -74,7 +74,7 @@ export function Apartment() {
             <Furniture url="/model/element/trashcan.glb" position={[4.8, 0.05, -6.8]} rotation={[0, - Math.PI * 2 / 8 , 0]} />
 
             {/* Bath Room */}
-            <Furniture url="/model/element/ShowerRound.glb" position={[6.61, 0.0, -0.63]} rotation={[0, Math.PI, 0]} />
+            <Furniture url="/model/element/showerRound.glb" position={[6.61, 0.0, -0.63]} rotation={[0, Math.PI, 0]} />
             <Furniture url="/model/element/bathroomSinkSquare.glb" position={[6.90, -0.1, -2.44]} rotation={[0, 0, 0]} />
             <Furniture url="/model/element/toilet.Glb" position={[7.95, 0.1, -1]} rotation={[0, - Math.PI / 2, 0]} />
 
