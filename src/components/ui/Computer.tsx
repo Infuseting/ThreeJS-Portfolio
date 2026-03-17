@@ -282,4 +282,4 @@ function ScreenGlow({ on }: { on: boolean }) {
       <object3D ref={targetRef} position={[0, 0, 0.2]} />
     </>
   )
-}
+}
